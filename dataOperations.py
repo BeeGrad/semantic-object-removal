@@ -7,10 +7,11 @@ import cv2
 import os, os.path
 
 
-class dataRead():
-    def __init__(self, dataset="cifar10", masking_type="lines"):
+class DataRead():
+    def __init__(self, dataset="cifar10", masking_type="lines", batch_size = 10):
         self.dataset = dataset
         self.masking_type = masking_type
+        self.batch_size = batch_size
 
     def get_data(self):
         """
@@ -31,7 +32,7 @@ class dataRead():
         """
         # Cifar10 dataset load part
         if self.dataset == 'cifar10':
-            self.path = "../../datasets/cifar10"
+            self.path = "../datasets/cifar10"
 
             self.train_files = ["data_batch_1", "data_batch_2", "data_batch_3", "data_batch_4",
                             "data_batch_5"]
@@ -63,7 +64,7 @@ class dataRead():
             self.data = data
 
         elif self.dataset == 'places2':
-            self.path = "../../datasets/places2"
+            self.path = "../datasets/places2"
             imgs = []
             ctr = 0
 
@@ -78,6 +79,7 @@ class dataRead():
                 ctr += 1
 
             self.data = np.array(imgs)
+
             print(f"Data Array has been created from places2 dataset with shape: {self.data.shape}")
 
     def show_sample_data(self, sample_type="batch"):
@@ -128,7 +130,7 @@ class dataRead():
         plt.imshow(masked_im)
         plt.show()
 
-    def create_mask(self):
+    def create_masked_data(self):
         """
         Input:
             none
@@ -164,9 +166,30 @@ class dataRead():
                 masked_image[mask==0] = 255
                 self.masked_data[img] = masked_image
 
+    def create_data_loaders(self):
+        """
+        Input:
+            none
+        Output:
+            none
+        Description:
+            Creates necessary data laoders for pytorch with specified batch size.
+        """
+
+        self.get_data()
+        self.create_masked_data()
+
+        self.data = torch.FloatTensor(self.data)
+        dataset = torch.utils.data.TensorDataset(self.data)
+        self.original_data_loader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size)
+
+        self.masked_data = torch.FloatTensor(self.masked_data)
+        dataset = torch.utils.data.TensorDataset(self.masked_data)
+        self.masked_data_loader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size)
+
 if __name__ == "__main__":
     data_class = dataRead(dataset='places2')
     data_class.get_data()
     data_class.show_sample_data()
-    data_class.create_mask()
+    data_class.create_masked_data()
     data_class.show_masked_and_original()
