@@ -40,3 +40,5 @@ class Config():
         self.BETA2 = 0.9
         self.D2G_LR = 0.1
         ''' Learnin rate and Beta parameters for training'''
+        self.GAN_LOSS = "nsgan"
+        ''' Possible Choices :nsgan | lsgan | hinge '''

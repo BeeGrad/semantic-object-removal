@@ -170,6 +170,16 @@ class EdgeGenerator(BaseNetwork):
 
 
 class Discriminator(BaseNetwork):
+    """
+    Input:
+        none
+    Output:
+        none
+    Description:
+        Discriminator network for that will be used for both edge and inpainting network.
+            - CNN
+    """
+
     def __init__(self, in_channels=2, use_sigmoid=True, use_spectral_norm=True, init_weights=True):
         super(Discriminator, self).__init__()
         self.use_sigmoid = use_sigmoid
@@ -216,6 +226,15 @@ class Discriminator(BaseNetwork):
 
 
 class ResnetBlock(nn.Module):
+    """
+    Input:
+        none
+    Output:
+        none
+    Description:
+        Resnet Block Structure that is used in the middle part of the both
+        Edge and Inpaint Generators.
+    """
     def __init__(self, dim, dilation=1, use_spectral_norm=False):
         super(ResnetBlock, self).__init__()
         self.conv_block = nn.Sequential(

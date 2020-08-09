@@ -15,5 +15,4 @@ if(cfg.show_masked_data):
 if(cfg.model == "EdgeConnect"):
     model = EdgeConnect()
 
-model.run()
 print(f"Training for {cfg.model} model is completed!")
