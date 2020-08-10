@@ -42,3 +42,10 @@ class Config():
         ''' Learnin rate and Beta parameters for training'''
         self.GAN_LOSS = "nsgan"
         ''' Possible Choices :nsgan | lsgan | hinge '''
+        self.FM_LOSS_WEIGHT = 10
+        ''' Feature-matching loss weight '''
+        self.L1_LOSS_WEIGHT = 1
+        self.STYLE_LOSS_WEIGHT = 1
+        self.CONTENT_LOSS_WEIGHT = 1
+        self.INPAINT_ADV_LOSS_WEIGHT = 0.01
+        ''' Loss weights '''
