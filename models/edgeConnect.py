@@ -35,7 +35,7 @@ class EdgeModel(BaseModel):
         Class of Edge GAN model. All the necessary adjustment are don in this class
     """
     def __init__(self):
-        super(EdgeConnect, self).__init__()
+        super(EdgeModel, self).__init__()
         self.generator = EdgeGenerator()
         self.discriminator = Discriminator()
 
@@ -158,7 +158,7 @@ class InpaintingModel(BaseModel):
         Class of Inpainting GAN model. All the necessary adjustment are don in this class
     """
     def __init__(self):
-        super(EdgeConnect, self).__init__()
+        super(InpaintingModel, self).__init__()
         self.generator = EdgeGenerator()
         self.discriminator = Discriminator()
 
@@ -284,3 +284,10 @@ class InpaintingModel(BaseModel):
 
         gen_loss.backward()
         self.gen_optimizer.step()
+
+class EdgeConnect():
+    def __init__(self):
+
+
+        self.edge_model = EdgeModel().to(cfg.DEVICE)
+        self.inpaint_model = InpaintingModel().to(cfg.DEVICE)

@@ -1,3 +1,5 @@
+import torch
+
 class Config():
     def __init__(self):
         """
@@ -9,6 +11,9 @@ class Config():
             Choose the preferences that will be used throughout the training
             process
         """
+        # Train Parameters
+        self.DEVICE = torch.device("cpu")
+
         # Data Parameters
         self.dataset = "places2"
         ''' Current Choices for datasets:
