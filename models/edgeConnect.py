@@ -127,6 +127,7 @@ class EdgeModel(BaseModel):
         edges_masked = (edges * (1 - masks))
         images_masked = (images * (1 - masks)) + masks
         inputs = torch.cat((images_masked, edges_masked, masks), dim=1)
+        print(inputs.shape)
         outputs = self.generator(inputs)                                    # in: [grayscale(1) + edge(1) + mask(1)]
         return outputs
 
@@ -286,8 +287,17 @@ class InpaintingModel(BaseModel):
         self.gen_optimizer.step()
 
 class EdgeConnect():
-    def __init__(self):
-
+    def __init__(self, train_data_loader, test_data_loader):
+        self.train_loader = train_data_loader
+        self.test_data_loader = test_data_loader
 
         self.edge_model = EdgeModel().to(cfg.DEVICE)
         self.inpaint_model = InpaintingModel().to(cfg.DEVICE)
+
+    def train(self):
+        for images, masked_images, images_gray, masks, edges in self.train_loader:
+            e_outputs, e_gen_loss, e_dis_loss, e_logs = self.edge_model.step(images_gray, edges, masks)
+            e_outputs = e_outputs * masks + edges * (1 - masks)
+            i_outputs, i_gen_loss, i_dis_loss, i_logs = self.inpaint_model.step(images, e_outputs, masks)
+            outputs_merged = (i_outputs * masks) + (images * (1 - masks))
+            break

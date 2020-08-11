@@ -13,6 +13,7 @@ if(cfg.show_masked_data):
     data.show_masked_and_original()
 
 if(cfg.model == "EdgeConnect"):
-    edgeConnectModel = EdgeConnect()
+    edgeConnectModel = EdgeConnect(data.train_data_loader, data.test_data_loader)
+    edgeConnectModel.train()
 
 print(f"Training for {cfg.model} model is completed!")

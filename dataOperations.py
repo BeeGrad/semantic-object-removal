@@ -5,7 +5,8 @@ from matplotlib import pyplot as plt
 import random
 import cv2
 import os, os.path
-
+from skimage.feature import canny
+from skimage.color import rgb2gray
 
 class DataRead():
     def __init__(self, dataset="cifar10", masking_type="lines", batch_size = 10):
@@ -141,6 +142,9 @@ class DataRead():
             Creates self.masked_data.
         """
         self.masked_data = np.empty_like(self.data)
+        self.masks = np.empty_like(self.data[:,:,:,0])
+        self.gray_data = np.empty_like(self.data[:,:,:,0])
+        self.edges = np.empty_like(self.data[:,:,:,0])
 
         ## Prepare masking matrix
         image_width = self.data.shape[1]
@@ -164,6 +168,10 @@ class DataRead():
                 ## Mask the image
                 masked_image = self.data[img].copy()
                 masked_image[mask==0] = 255
+                mask = mask[:,:,0] # Mask should be 2 dimensional for the rest of the operations
+                self.masks[img] = mask
+                self.gray_data[img] = rgb2gray(self.data[img])
+                self.edges[img] = canny(self.gray_data[img], sigma=2, mask=mask)
                 self.masked_data[img] = masked_image
 
     def create_data_loaders(self):
@@ -180,12 +188,31 @@ class DataRead():
         self.create_masked_data()
 
         self.data = torch.FloatTensor(self.data)
-        dataset = torch.utils.data.TensorDataset(self.data)
-        self.original_data_loader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size)
+        self.masked_data = torch.FloatTensor(self.masked_data)
+        self.gray_data = torch.FloatTensor(self.gray_data)
+        self.masks = torch.FloatTensor(self.masks)
+        self.edges = torch.FloatTensor(self.edges)
 
+        self.gray_data = self.gray_data.unsqueeze(1)
+        self.edges = self.edges.unsqueeze(1)
+        self.masks = self.masks.unsqueeze(1)
+        self.data = self.data.permute(0,3,1,2)
+        self.masked_data = self.masked_data.permute(0,3,1,2)
+
+        print(f"Masks shape: {self.masks.shape}")
+        print(f"Edges shape: {self.edges.shape}")
+        print(f"Gray_daya shape: {self.gray_data.shape}")
+        print(f"masked_data shape: {self.masked_data.shape}")
+        print(f"data shape: {self.data.shape}")
+
+
+        dataset = torch.utils.data.TensorDataset(self.data, self.masked_data, self.gray_data, self.masks, self.edges)
+        self.train_data_loader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size)
+
+        self.data = torch.FloatTensor(self.data)
         self.masked_data = torch.FloatTensor(self.masked_data)
         dataset = torch.utils.data.TensorDataset(self.masked_data)
-        self.masked_data_loader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size)
+        self.test_data_loader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size)
 
 if __name__ == "__main__":
     data_class = dataRead(dataset='places2')
