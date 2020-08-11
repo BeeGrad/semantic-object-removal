@@ -127,7 +127,6 @@ class EdgeModel(BaseModel):
         edges_masked = (edges * (1 - masks))
         images_masked = (images * (1 - masks)) + masks
         inputs = torch.cat((images_masked, edges_masked, masks), dim=1)
-        print(inputs.shape)
         outputs = self.generator(inputs)                                    # in: [grayscale(1) + edge(1) + mask(1)]
         return outputs
 
@@ -160,8 +159,8 @@ class InpaintingModel(BaseModel):
     """
     def __init__(self):
         super(InpaintingModel, self).__init__()
-        self.generator = EdgeGenerator()
-        self.discriminator = Discriminator()
+        self.generator = InpaintGenerator()
+        self.discriminator = Discriminator(in_channels=3)
 
         self.l1_loss = nn.L1Loss()
         self.perceptual_loss = PerceptualLoss()
@@ -204,17 +203,17 @@ class InpaintingModel(BaseModel):
 
 
         # discriminator loss
-        dis_input_real = torch.cat((images, edges), dim=1)
-        dis_input_fake = torch.cat((images, outputs.detach()), dim=1)
-        dis_real, _ = self.discriminator(dis_input_real)        # in: (grayscale(1) + edge(1))
-        dis_fake, _ = self.discriminator(dis_input_fake)        # in: (grayscale(1) + edge(1))
+        dis_input_real = images
+        dis_input_fake = outputs.detach()
+        dis_real, _ = self.discriminator(dis_input_real)                    # in: [rgb(3)]
+        dis_fake, _ = self.discriminator(dis_input_fake)                    # in: [rgb(3)]
         dis_real_loss = self.adversarial_loss(dis_real, True, True)
         dis_fake_loss = self.adversarial_loss(dis_fake, False, True)
         dis_loss += (dis_real_loss + dis_fake_loss) / 2
 
 
         # generator adversarial loss
-        gen_input_fake = torch.cat((images, outputs), dim=1)
+        gen_input_fake = outputs
         gen_fake, _ = self.discriminator(gen_input_fake)        # in: (grayscale(1) + edge(1))
         gen_gan_loss = self.adversarial_loss(gen_fake, True, False)
         gen_loss += gen_gan_loss
@@ -241,7 +240,7 @@ class InpaintingModel(BaseModel):
         # generator style loss
         gen_style_loss = self.style_loss(outputs * masks, images * masks)
         gen_style_loss = gen_style_loss * cfg.STYLE_LOSS_WEIGHT
-        gen_loss += gen_style_losss
+        gen_loss += gen_style_loss
 
 
         # create logs
@@ -268,6 +267,7 @@ class InpaintingModel(BaseModel):
         """
         images_masked = (images * (1 - masks).float()) + masks
         inputs = torch.cat((images_masked, edges), dim=1)
+        print(inputs.shape)
         outputs = self.generator(inputs)                                    # in: [rgb(3) + edge(1)]
         return outputs
 

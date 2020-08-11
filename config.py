@@ -20,7 +20,7 @@ class Config():
                 -places2
                 -cifar10
                 '''
-        self.batch_size = 10
+        self.batch_size = 1
         ''' Batch Size for DataLoader '''
         self.masking_type = "lines"
         ''' Current Choices for masking types:
