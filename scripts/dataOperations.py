@@ -32,13 +32,18 @@ class DataRead():
             creates a self.data that containts the dataset
         """
         # Cifar10 dataset load part
-        if self.dataset == 'cifar10':
+        if self.dataset == "cifar10":
             self.path = "../datasets/cifar10"
 
-            self.train_files = ["data_batch_1", "data_batch_2", "data_batch_3", "data_batch_4",
-                            "data_batch_5"]
+            self.train_files = [
+                "data_batch_1",
+                "data_batch_2",
+                "data_batch_3",
+                "data_batch_4",
+                "data_batch_5",
+            ]
 
-            data = np.empty((50000,32,32,3), int)
+            data = np.empty((50000, 32, 32, 3), int)
             file_num = 0
 
             for file in self.train_files:
@@ -64,7 +69,7 @@ class DataRead():
             print(f"Data Array has been created from cifar10 dataset with shape: {data.shape}")
             self.data = data
 
-        elif self.dataset == 'places2':
+        elif self.dataset == "places2":
             self.path = "../datasets/places2"
             imgs = []
             ctr = 0
@@ -81,7 +86,9 @@ class DataRead():
 
             self.data = np.array(imgs)
 
-            print(f"Data Array has been created from places2 dataset with shape: {self.data.shape}")
+            print(
+                f"Data Array has been created from places2 dataset with shape: {self.data.shape}"
+            )
 
     def show_sample_data(self, sample_type="batch"):
         """
@@ -142,9 +149,9 @@ class DataRead():
             Creates self.masked_data.
         """
         self.masked_data = np.empty_like(self.data)
-        self.masks = np.empty_like(self.data[:,:,:,0])
-        self.gray_data = np.empty_like(self.data[:,:,:,0])
-        self.edges = np.empty_like(self.data[:,:,:,0])
+        self.masks = np.empty_like(self.data[:, :, :, 0])
+        self.gray_data = np.empty_like(self.data[:, :, :, 0])
+        self.edges = np.empty_like(self.data[:, :, :, 0])
 
         ## Prepare masking matrix
         image_width = self.data.shape[1]
@@ -167,8 +174,10 @@ class DataRead():
 
                 ## Mask the image
                 masked_image = self.data[img].copy()
-                masked_image[mask==0] = 255
-                mask = mask[:,:,0] # Mask should be 2 dimensional for the rest of the operations
+                masked_image[mask == 0] = 255
+                mask = mask[
+                    :, :, 0
+                ]  # Mask should be 2 dimensional for the rest of the operations
                 self.masks[img] = mask
                 self.gray_data[img] = rgb2gray(self.data[img])
                 self.edges[img] = canny(self.gray_data[img], sigma=2, mask=mask)
@@ -196,8 +205,8 @@ class DataRead():
         self.gray_data = self.gray_data.unsqueeze(1)
         self.edges = self.edges.unsqueeze(1)
         self.masks = self.masks.unsqueeze(1)
-        self.data = self.data.permute(0,3,1,2)
-        self.masked_data = self.masked_data.permute(0,3,1,2)
+        self.data = self.data.permute(0, 3, 1, 2)
+        self.masked_data = self.masked_data.permute(0, 3, 1, 2)
 
         print(f"Masks shape: {self.masks.shape}")
         print(f"Edges shape: {self.edges.shape}")
@@ -205,14 +214,20 @@ class DataRead():
         print(f"masked_data shape: {self.masked_data.shape}")
         print(f"data shape: {self.data.shape}")
 
-
-        dataset = torch.utils.data.TensorDataset(self.data, self.masked_data, self.gray_data, self.masks, self.edges)
-        self.train_data_loader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size)
+        dataset = torch.utils.data.TensorDataset(
+            self.data, self.masked_data, self.gray_data, self.masks, self.edges
+        )
+        self.train_data_loader = torch.utils.data.DataLoader(
+            dataset, batch_size=self.batch_size
+        )
 
         self.data = torch.FloatTensor(self.data)
         self.masked_data = torch.FloatTensor(self.masked_data)
         dataset = torch.utils.data.TensorDataset(self.masked_data)
-        self.test_data_loader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size)
+        self.test_data_loader = torch.utils.data.DataLoader(
+            dataset, batch_size=self.batch_size
+        )
+
 
 if __name__ == "__main__":
     data_class = dataRead(dataset='places2')
