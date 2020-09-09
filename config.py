@@ -13,6 +13,9 @@ class Config():
         """
         # Train Parameters
         self.DEVICE = torch.device("cpu")
+        ''' Choose to train on cpu or gpu '''
+        self.epoch_num = 100
+        ''' Choose number of epochs '''
 
         # Data Parameters
         self.dataset = "places2"
@@ -20,7 +23,7 @@ class Config():
                 -places2
                 -cifar10
                 '''
-        self.batch_size = 1
+        self.batch_size = 2
         ''' Batch Size for DataLoader '''
         self.masking_type = "lines"
         ''' Current Choices for masking types:
@@ -40,6 +43,8 @@ class Config():
                 '''
         self.saveName = f"{self.model}Model"
         ''' Save name that is going to be used while training '''
+        self.loadModel = True
+        ''' Choose to load model '''
         self.loadName = f"{self.model}Model"
         ''' Load name to load the pre-trained model '''
         self.LR = 0.0001
@@ -56,3 +61,8 @@ class Config():
         self.CONTENT_LOSS_WEIGHT = 1
         self.INPAINT_ADV_LOSS_WEIGHT = 0.01
         ''' Loss weights '''
+        self.edge_gen_path = f"../saves/{self.saveName}/EdgeGenerator.pt"
+        self.edge_disc_path = f"../saves/{self.saveName}/EdgeDiscriminator.pt"
+        self.inpaint_gen_path = f"../saves/{self.saveName}/InpaintGenerator.pt"
+        self.inpaint_disc_path = f"../saves/{self.saveName}/InpaintDiscriminator.pt"
+        ''' Save locations for generator and discriminator for edge and inpaint models '''

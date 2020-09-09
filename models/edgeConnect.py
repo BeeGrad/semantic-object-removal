@@ -267,7 +267,6 @@ class InpaintingModel(BaseModel):
         """
         images_masked = (images * (1 - masks).float()) + masks
         inputs = torch.cat((images_masked, edges), dim=1)
-        print(inputs.shape)
         outputs = self.generator(inputs)                                    # in: [rgb(3) + edge(1)]
         return outputs
 
@@ -294,10 +293,50 @@ class EdgeConnect():
         self.edge_model = EdgeModel().to(cfg.DEVICE)
         self.inpaint_model = InpaintingModel().to(cfg.DEVICE)
 
+        self.iteration = 0
+
     def train(self):
-        for images, masked_images, images_gray, masks, edges in self.train_loader:
-            e_outputs, e_gen_loss, e_dis_loss, e_logs = self.edge_model.step(images_gray, edges, masks)
-            e_outputs = e_outputs * masks + edges * (1 - masks)
-            i_outputs, i_gen_loss, i_dis_loss, i_logs = self.inpaint_model.step(images, e_outputs, masks)
-            outputs_merged = (i_outputs * masks) + (images * (1 - masks))
+        if cfg.loadModel:
+            self.load()
+        for i in range(self.iteration, cfg.epoch_num):
+            self.iteration += 1
+            for images, masked_images, images_gray, masks, edges in self.train_loader:
+                e_outputs, e_gen_loss, e_dis_loss, e_logs = self.edge_model.step(images_gray, edges, masks)
+                e_outputs = e_outputs * masks + edges * (1 - masks)
+                i_outputs, i_gen_loss, i_dis_loss, i_logs = self.inpaint_model.step(images, e_outputs, masks)
+                outputs_merged = (i_outputs * masks) + (images * (1 - masks))
+                print(i_dis_loss)
             break
+
+            self.save()
+
+    def save(self):
+        torch.save({
+            'iteration': self.iteration,
+            'generator': self.edge_model.generator.state_dict()
+        }, cfg.edge_gen_path)
+
+        torch.save({
+            'discriminator': self.edge_model.discriminator.state_dict()
+        }, cfg.edge_disc_path)
+
+        torch.save({
+            'iteration': self.iteration,
+            'generator': self.inpaint_model.generator.state_dict()
+        }, cfg.inpaint_gen_path)
+
+        torch.save({
+            'discriminator': self.inpaint_model.discriminator.state_dict()
+        }, cfg.inpaint_disc_path)
+
+    def load(self):
+        edgeDisc = torch.load(cfg.edge_disc_path, map_location=lambda storage, loc: storage)
+        edgeGen = torch.load(cfg.edge_gen_path, map_location=lambda storage, loc: storage)
+        inpaintDisc = torch.load(cfg.inpaint_disc_path, map_location=lambda storage, loc: storage)
+        inpaintGen = torch.load(cfg.inpaint_gen_path, map_location=lambda storage, loc: storage)
+
+        self.iteration = edgeGen['iteration']
+        self.edge_model.generator.load_state_dict(edgeGen['generator'])
+        self.edge_model.discriminator.load_state_dict(edgeDisc['discriminator'])
+        self.inpaint_model.generator.load_state_dict(inpaintGen['generator'])
+        self.inpaint_model.discriminator.load_state_dict(inpaintDisc['discriminator'])
