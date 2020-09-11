@@ -35,6 +35,8 @@ class Config():
         ''' Choose if a sample from masked data will be shown before training'''
         self.SIGMA = 2
         ''' Parameter for canny edge detector '''
+        self.max_pixel_value = 255.0
+        ''' Maximum value in an image, necessary to calculate PSNR '''
 
         # Model Parameters
         self.model = "EdgeConnect"

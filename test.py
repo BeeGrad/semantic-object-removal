@@ -1,9 +1,10 @@
 import cv2
 import numpy as np
+from utils.utils import calculate_psnr
 
-original_image = cv2.imread('test/test001.png')
+original_image = cv2.imread('../foreground-substraction/test/test001.png')
 
-def freely_select_from_image(original_image):
+def freely_select_from_image(org_img):
     """
         Input:
             original_image
@@ -13,6 +14,7 @@ def freely_select_from_image(original_image):
             Freely remove any area from image.
         """
     drawing = False
+    img = org_img.copy()
 
     def mouse_action(event, former_x, former_y, flags, param):
         global drawing, current_former_x, current_former_y, count
@@ -22,7 +24,7 @@ def freely_select_from_image(original_image):
 
         if event == cv2.EVENT_MOUSEMOVE:
             if drawing == True:
-                cv2.line(original_image,(current_former_x,current_former_y),(former_x,former_y),(0,0,0),5)
+                cv2.line(img,(current_former_x,current_former_y),(former_x,former_y),(0,0,0),5)
                 current_former_x = former_x
                 current_former_y = former_y
 
@@ -33,13 +35,13 @@ def freely_select_from_image(original_image):
     cv2.setMouseCallback('image',mouse_action)
 
     while True:
-        cv2.imshow("image", original_image)
+        cv2.imshow("image", img)
         k = cv2.waitKey(20) & 0xFF
         if k == 27:
             break
 
-    return original_image
+    return img
 
 input_image = freely_select_from_image(original_image)
-
+print(calculate_psnr(input_image, original_image))
 # Take output with pre-trained network
