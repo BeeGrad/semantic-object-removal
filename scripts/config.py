@@ -25,13 +25,14 @@ class Config():
                 '''
         self.batch_size = 2
         ''' Batch Size for DataLoader '''
-        self.masking_type = "lines"
+        self.masking_type = "10-20percentage"
         ''' Current Choices for masking types:
                 -lines
+                -10-20percentage
                 '''
         self.show_sample_data = False
         ''' Choose if a sample from dataset will be shown before training'''
-        self.show_masked_data = False
+        self.show_masked_data = True
         ''' Choose if a sample from masked data will be shown before training'''
         self.SIGMA = 2
         ''' Parameter for canny edge detector '''

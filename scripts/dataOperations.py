@@ -128,15 +128,16 @@ class DataRead():
         Description:
             Shows the orignal and masked image of same data
         """
-        sample = random.randint(0,self.data.shape[0]-1)
-        im = self.data[sample]
-        masked_im = self.masked_data[sample]
-        fig=plt.figure(figsize=(1, 2))
-        fig.add_subplot(1, 2, 1)
-        plt.imshow(im)
-        fig.add_subplot(1, 2, 2)
-        plt.imshow(masked_im)
-        plt.show()
+        for i in range(10):
+            sample = random.randint(0,self.data.shape[0]-1)
+            im = self.data[sample]
+            masked_im = self.masked_data[sample]
+            fig=plt.figure(figsize=(1, 2))
+            fig.add_subplot(1, 2, 1)
+            plt.imshow(im.permute(1,2,0).numpy().astype(int))
+            fig.add_subplot(1, 2, 2)
+            plt.imshow(masked_im.permute(1,2,0).numpy().astype(int))
+            plt.show()
 
     def create_masked_data(self):
         """
@@ -183,6 +184,35 @@ class DataRead():
                 self.edges[img] = canny(self.gray_data[img], sigma=2, mask=mask)
                 self.masked_data[img] = masked_image
 
+        if self.masking_type == '10-20percentage':
+            coverage = np.random.uniform(3.2,4.4)
+            off_x = int(image_width // coverage)
+            off_y = int(image_heigth // coverage)
+
+
+            for img in range(self.data.shape[0]):
+                start_x = np.random.randint(0, image_width-off_x)
+                start_y = np.random.randint(0, image_heigth-off_y)
+
+                start_point = (start_x, start_y)
+                end_point = (start_x + off_x, start_y + off_y)
+                
+                mask = np.full((image_width,image_heigth, image_channel), 255, np.uint8) ## White background
+                cv2.rectangle(mask, start_point, end_point, (0,0,0), -1)
+
+                ## Mask the image
+                masked_image = self.data[img].copy()
+                masked_image[mask == 0] = 255
+                mask = mask[
+                    :, :, 0
+                ]  # Mask should be 2 dimensional for the rest of the operations
+                self.masks[img] = mask
+                self.gray_data[img] = rgb2gray(self.data[img])
+                self.edges[img] = canny(self.gray_data[img], sigma=2, mask=mask)
+                self.masked_data[img] = masked_image
+
+
+
     def create_data_loaders(self):
         """
         Input:
@@ -210,7 +240,7 @@ class DataRead():
 
         print(f"Masks shape: {self.masks.shape}")
         print(f"Edges shape: {self.edges.shape}")
-        print(f"Gray_daya shape: {self.gray_data.shape}")
+        print(f"Gray_data shape: {self.gray_data.shape}")
         print(f"masked_data shape: {self.masked_data.shape}")
         print(f"data shape: {self.data.shape}")
 
@@ -223,7 +253,7 @@ class DataRead():
 
         self.data = torch.FloatTensor(self.data)
         self.masked_data = torch.FloatTensor(self.masked_data)
-        dataset = torch.utils.data.TensorDataset(self.masked_data)
+        dataset = torch.utils.data.TensorDataset(self.masked_data) ## Buraya daha sonra bir bak hata var gibi
         self.test_data_loader = torch.utils.data.DataLoader(
             dataset, batch_size=self.batch_size
         )
