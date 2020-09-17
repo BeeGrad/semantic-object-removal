@@ -68,3 +68,17 @@ class Config():
         self.inpaint_gen_path = f"../saves/{self.saveName}/InpaintGenerator.pt"
         self.inpaint_disc_path = f"../saves/{self.saveName}/InpaintDiscriminator.pt"
         ''' Save locations for generator and discriminator for edge and inpaint models '''
+
+        # Test parameters
+        self.test_im_path = '../foreground-substraction/test/paris.jpg'
+        ''' Location of the image that is used to eval the program '''
+        self.test_mask_method = 'select_by_edge'
+        ''' Method to mask the test image
+            - freely_select_from_image
+            - select_by_edge
+         '''
+        self.freely_select_mask_size = 30
+        ''' Size of the brush for freely select method '''
+        self.thresh1 = 150
+        self.thresh2 = 250
+        ''' Threshold values for canny edge detection '''

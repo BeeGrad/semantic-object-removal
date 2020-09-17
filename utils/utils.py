@@ -7,7 +7,7 @@ from scripts.config import Config
 cfg = Config()
 
 def calculate_psnr(img1, img2):
-    mse = np.mean( (img1 - img2) ** 2 )
+    mse = np.mean( (img2 - img1) ** 2 )
     if mse == 0:
         return 100
     PIXEL_MAX = cfg.max_pixel_value
