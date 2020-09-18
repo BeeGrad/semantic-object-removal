@@ -64,27 +64,36 @@ class Config():
         self.CONTENT_LOSS_WEIGHT = 1
         self.INPAINT_ADV_LOSS_WEIGHT = 0.01
         ''' Loss weights '''
-        self.edge_gen_path = f"../saves/{self.saveName}/EdgeGenerator.pt"
-        self.edge_disc_path = f"../saves/{self.saveName}/EdgeDiscriminator.pt"
-        self.inpaint_gen_path = f"../saves/{self.saveName}/InpaintGenerator.pt"
-        self.inpaint_disc_path = f"../saves/{self.saveName}/InpaintDiscriminator.pt"
-        ''' Save locations for generator and discriminator for edge and inpaint models '''
+        self.edge_gen_path = f"../saves/{self.saveName}/pretrainedOur/EdgeGenerator.pt"
+        self.edge_disc_path = f"../saves/{self.saveName}/pretrainedOur/EdgeDiscriminator.pt"
+        self.inpaint_gen_path = f"../saves/{self.saveName}/pretrainedOur/InpaintGenerator.pt"
+        self.inpaint_disc_path = f"../saves/{self.saveName}/pretrainedOur/InpaintDiscriminator.pt"
+        ''' Save locations for generator and discriminator for edge and inpaint models for train'''
 
         # Test parameters
-        self.test_im_path = '../foreground-substraction/test/paris.jpg'
+        self.test_im_path = '../foreground-substraction/test/test005.jpg'
         ''' Location of the image that is used to eval the program '''
         self.test_mask_method = 'freely_select_from_image'
         ''' Method to mask the test image
             - freely_select_from_image
             - select_by_edge
          '''
-        self.freely_select_mask_size = 5
+        self.freely_select_mask_size = 15
         ''' Size of the brush for freely select method '''
         self.thresh1 = 150
         self.thresh2 = 250
         ''' Threshold values for canny edge detection '''
-        self.test_inpaint_method = 'mathematical'
-        ''' Method to inpaint the test image '''
+        self.test_inpaint_method = 'EdgeConnect'
+        ''' Method to inpaint the test image
+            - Mathematical
+            - EdgeConnect
+        '''
+        self.test_edge_gen_path = f"../saves/{self.saveName}/pretrainedPaper/EdgeGenerator.pth"
+        self.test_edge_disc_path = f"../saves/{self.saveName}/pretrainedPaper/EdgeDiscriminator.pth"
+        self.test_inpaint_gen_path = f"../saves/{self.saveName}/pretrainedPaper/InpaintGenerator.pth"
+        self.test_inpaint_disc_path = f"../saves/{self.saveName}/pretrainedPaper/InpaintDiscriminator.pth"
+        ''' Save locations for generator and discriminator for edge and inpaint models for test'''
+
 
         # Traditional Models parameters
         self.mathematical_method = "navier-strokes"
