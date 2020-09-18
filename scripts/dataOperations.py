@@ -107,8 +107,7 @@ class DataRead():
             plt.show()
 
         if sample_type == 'batch':
-            w=32
-            h=32
+
             fig=plt.figure(figsize=(8, 8))
             columns = 8
             rows = 8
@@ -116,7 +115,7 @@ class DataRead():
                 sample = random.randint(0,self.data.shape[0]-1)
                 img = self.data[sample]
                 fig.add_subplot(rows, columns, i)
-                plt.imshow(img)
+                plt.imshow(img.permute(1,2,0).numpy().astype(int))
             plt.show()
 
     def show_masked_and_original(self):
@@ -128,7 +127,7 @@ class DataRead():
         Description:
             Shows the orignal and masked image of same data
         """
-        for i in range(10):
+        for i in range(2):
             sample = random.randint(0,self.data.shape[0]-1)
             im = self.data[sample]
             masked_im = self.masked_data[sample]
@@ -196,7 +195,7 @@ class DataRead():
 
                 start_point = (start_x, start_y)
                 end_point = (start_x + off_x, start_y + off_y)
-                
+
                 mask = np.full((image_width,image_heigth, image_channel), 255, np.uint8) ## White background
                 cv2.rectangle(mask, start_point, end_point, (0,0,0), -1)
 

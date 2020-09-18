@@ -1,8 +1,10 @@
 import cv2
 import numpy as np
 from scripts.config import Config
+from matplotlib import pyplot as plt
 
 cfg = Config()
+drawing = False
 
 def freely_select_from_image(org_img):
     """
@@ -13,8 +15,8 @@ def freely_select_from_image(org_img):
         Description:
             Freely remove any area from image.
         """
-    drawing = False
     img = org_img.copy()
+    mask = np.empty_like(img)
 
     def mouse_action(event, former_x, former_y, flags, param):
         global current_former_x, current_former_y, count, drawing
@@ -48,7 +50,9 @@ def freely_select_from_image(org_img):
         if k == 27:
             break
 
-    return img
+    mask = cv2.subtract(org_img[:,:,0], img[:,:,0]) # Renkler karisiyor ama sadece maske lazim oldugu icin onemseme su an
+    ret,mask = cv2.threshold(mask,1,255,cv2.THRESH_BINARY)
+    return img, mask
 
 def select_by_edge(org_img):
     img = org_img.copy()

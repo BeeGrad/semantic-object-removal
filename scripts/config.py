@@ -30,9 +30,9 @@ class Config():
                 -lines
                 -10-20percentage
                 '''
-        self.show_sample_data = False
+        self.show_sample_data = True
         ''' Choose if a sample from dataset will be shown before training'''
-        self.show_masked_data = True
+        self.show_masked_data = False
         ''' Choose if a sample from masked data will be shown before training'''
         self.SIGMA = 2
         ''' Parameter for canny edge detector '''
@@ -73,13 +73,22 @@ class Config():
         # Test parameters
         self.test_im_path = '../foreground-substraction/test/paris.jpg'
         ''' Location of the image that is used to eval the program '''
-        self.test_mask_method = 'select_by_edge'
+        self.test_mask_method = 'freely_select_from_image'
         ''' Method to mask the test image
             - freely_select_from_image
             - select_by_edge
          '''
-        self.freely_select_mask_size = 30
+        self.freely_select_mask_size = 5
         ''' Size of the brush for freely select method '''
         self.thresh1 = 150
         self.thresh2 = 250
         ''' Threshold values for canny edge detection '''
+        self.test_inpaint_method = 'mathematical'
+        ''' Method to inpaint the test image '''
+
+        # Traditional Models parameters
+        self.mathematical_method = "navier-strokes"
+        ''' Method to use in mathematical inpainting
+            - navier-strokes
+            - fast-marching
+         '''
