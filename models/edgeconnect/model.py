@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 import cv2
+from matplotlib import pyplot as plt
 from models.edgeconnect.network import InpaintGenerator, EdgeGenerator, Discriminator
 from scripts.loss import AdversarialLoss, PerceptualLoss, StyleLoss
 from scripts.config import Config
@@ -299,7 +300,7 @@ class EdgeConnect():
 
         self.iteration = 0
 
-    def single_test(self, test_image, mask):
+    def single_test(self, test_image, mask, image_gray, edge):
         edgeDisc = torch.load(cfg.test_edge_disc_path, map_location=lambda storage, loc: storage)
         edgeGen = torch.load(cfg.test_edge_gen_path, map_location=lambda storage, loc: storage)
         inpaintDisc = torch.load(cfg.test_inpaint_disc_path, map_location=lambda storage, loc: storage)
@@ -314,13 +315,13 @@ class EdgeConnect():
         print("Weights are updated")
 
         # image_gray = rgb2gray(test_image)
-        image_gray = cv2.cvtColor(test_image, cv2.COLOR_RGB2GRAY)
-        edge = canny(image_gray, sigma=cfg.SIGMA, mask=mask)
+        # image_gray = cv2.cvtColor(test_image, cv2.COLOR_RGB2GRAY)
+        # edge = cv2.Canny(image_gray, cfg.thresh1, cfg.thresh2)
 
         test_image = torch.FloatTensor(test_image) / 255
         mask = torch.FloatTensor(mask) / 255
-        image_gray = torch.FloatTensor(image_gray)
-        edge = torch.FloatTensor(edge)
+        image_gray = torch.FloatTensor(image_gray) / 255
+        edge = torch.FloatTensor(edge) / 255
 
         test_image = test_image.permute(2,0,1)
         test_image = test_image.unsqueeze(0)
@@ -345,8 +346,14 @@ class EdgeConnect():
         i_outputs = i_outputs
         outputs_merged = (i_outputs * mask) + (test_image * (1 - mask))
         print("Inpaint is completed!")
+
         output_image = outputs_merged.squeeze().permute(1,2,0)
-        return output_image.detach().numpy()
+        edge = edge.squeeze(0)
+        edge = edge.squeeze(0)
+        e_outputs = e_outputs.squeeze(0)
+        e_outputs = e_outputs.squeeze(0)
+
+        return output_image.detach().numpy(), edge.numpy(), e_outputs.detach().numpy()
 
     def train(self):
         if cfg.loadModel:

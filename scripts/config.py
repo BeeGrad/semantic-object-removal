@@ -80,7 +80,7 @@ class Config():
          '''
         self.freely_select_mask_size = 15
         ''' Size of the brush for freely select method '''
-        self.thresh1 = 150
+        self.thresh1 = 200
         self.thresh2 = 250
         ''' Threshold values for canny edge detection '''
         self.test_inpaint_method = 'EdgeConnect'
