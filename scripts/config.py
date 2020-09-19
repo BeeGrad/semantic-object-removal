@@ -34,7 +34,7 @@ class Config():
         ''' Choose if a sample from dataset will be shown before training'''
         self.show_masked_data = False
         ''' Choose if a sample from masked data will be shown before training'''
-        self.SIGMA = 2
+        self.SIGMA = 1
         ''' Parameter for canny edge detector '''
         self.max_pixel_value = 255.0
         ''' Maximum value in an image, necessary to calculate PSNR '''

@@ -26,7 +26,7 @@ def freely_select_from_image(org_img):
 
         if event == cv2.EVENT_MOUSEMOVE:
             if drawing == True:
-                cv2.line(img,(current_former_x,current_former_y),(former_x,former_y),(0,0,0), cfg.freely_select_mask_size)
+                cv2.line(img,(current_former_x,current_former_y),(former_x,former_y),(255,255,255), cfg.freely_select_mask_size)
                 current_former_x = former_x
                 current_former_y = former_y
 
@@ -50,7 +50,7 @@ def freely_select_from_image(org_img):
         if k == 27:
             break
 
-    mask = cv2.subtract(org_img[:,:,0], img[:,:,0]) # Renkler karisiyor ama sadece maske lazim oldugu icin onemseme su an
+    mask = cv2.subtract(img[:,:,0], org_img[:,:,0]) # Renkler karisiyor ama sadece maske lazim oldugu icin onemseme su an
     ret,mask = cv2.threshold(mask,1,255,cv2.THRESH_BINARY)
     return img, mask
 

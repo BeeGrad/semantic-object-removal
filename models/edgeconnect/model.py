@@ -315,7 +315,7 @@ class EdgeConnect():
 
         # image_gray = rgb2gray(test_image)
         image_gray = cv2.cvtColor(test_image, cv2.COLOR_RGB2GRAY)
-        edge = canny(image_gray, sigma=2, mask=mask)
+        edge = canny(image_gray, sigma=cfg.SIGMA, mask=mask)
 
         test_image = torch.FloatTensor(test_image) / 255
         mask = torch.FloatTensor(mask) / 255

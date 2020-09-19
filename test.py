@@ -25,19 +25,21 @@ if (cfg.test_inpaint_method == "Mathematical"):
 
 if (cfg.test_inpaint_method == "EdgeConnect"):
     inpaint = EdgeConnect()
-    output = inpaint.single_test(original_image, mask)
+    output = inpaint.single_test(input_image, mask)
     print(output.shape)
 
 print(calculate_psnr(input_image, original_image))
 print(calculate_psnr(output, original_image))
 print(output.max())
 
-fig=plt.figure(figsize=(1, 3))
-fig.add_subplot(1, 3, 1)
+fig=plt.figure(figsize=(2, 2))
+fig.add_subplot(2, 2, 1)
 plt.imshow(original_image)
-fig.add_subplot(1, 3, 2)
+fig.add_subplot(2, 2, 2)
 plt.imshow(input_image)
-fig.add_subplot(1, 3, 3)
+fig.add_subplot(2, 2, 3)
+plt.imshow(mask)
+fig.add_subplot(2, 2, 4)
 plt.imshow(output)
 plt.show()
 # Take output with pre-trained network
