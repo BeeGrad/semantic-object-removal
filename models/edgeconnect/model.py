@@ -316,10 +316,6 @@ class EdgeConnect():
         # image_gray = rgb2gray(test_image)
         image_gray = cv2.cvtColor(test_image, cv2.COLOR_RGB2GRAY)
         edge = canny(image_gray, sigma=2, mask=mask)
-        # v = np.median(image_gray)
-        # t1 = int(max(0, (1.0 - 0.33) * v))
-        # t2 = int(min(255, (1.0 + 0.33) * v))
-        # edge = cv2.Canny(image_gray, t1, t2)
 
         test_image = torch.FloatTensor(test_image) / 255
         mask = torch.FloatTensor(mask) / 255
@@ -363,6 +359,8 @@ class EdgeConnect():
                 i_outputs, i_gen_loss, i_dis_loss, i_logs = self.inpaint_model.step(images, e_outputs, masks)
                 outputs_merged = (i_outputs * masks) + (images * (1 - masks))
                 print(i_dis_loss)
+                self.inpaint_model.backward(i_gen_loss, i_dis_loss)
+                self.edge_model.backward(e_gen_loss, e_dis_loss)
             break
 
             self.save()

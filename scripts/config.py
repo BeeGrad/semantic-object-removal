@@ -23,7 +23,7 @@ class Config():
                 -places2
                 -cifar10
                 '''
-        self.batch_size = 2
+        self.batch_size = 1
         ''' Batch Size for DataLoader '''
         self.masking_type = "10-20percentage"
         ''' Current Choices for masking types:
