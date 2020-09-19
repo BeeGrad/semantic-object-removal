@@ -301,6 +301,19 @@ class EdgeConnect():
         self.iteration = 0
 
     def single_test(self, test_image, mask, image_gray, edge):
+        """
+        Input:
+            test_image: Input image that will be used with network, masked image
+            mask: Mask that is used to mask the original image
+            image_gray: gray version of the image
+            edge: edge map of the masked image
+        Output:
+            output_image: Result of the network
+            edge_generated: Output of the edge generator
+        Description:
+            Use pretrained version of the edgeconnect model to eval for only 1 image
+        """
+
         edgeDisc = torch.load(cfg.test_edge_disc_path, map_location=lambda storage, loc: storage)
         edgeGen = torch.load(cfg.test_edge_gen_path, map_location=lambda storage, loc: storage)
         inpaintDisc = torch.load(cfg.test_inpaint_disc_path, map_location=lambda storage, loc: storage)
@@ -348,14 +361,20 @@ class EdgeConnect():
         print("Inpaint is completed!")
 
         output_image = outputs_merged.squeeze().permute(1,2,0)
-        edge = edge.squeeze(0)
-        edge = edge.squeeze(0)
         e_outputs = e_outputs.squeeze(0)
         e_outputs = e_outputs.squeeze(0)
 
-        return output_image.detach().numpy(), edge.numpy(), e_outputs.detach().numpy()
+        return output_image.detach().numpy(), e_outputs.detach().numpy()
 
     def train(self):
+        """
+        Input:
+            none
+        Output:
+            none
+        Description:
+            Trains both edge and inpaint model in order then update the parameters
+        """
         if cfg.loadModel:
             self.load()
         for i in range(self.iteration, cfg.epoch_num):
@@ -373,6 +392,15 @@ class EdgeConnect():
             self.save()
 
     def save(self):
+        """
+        Input:
+            none
+        Output:
+            none
+        Description:
+            Saves 4 pytroch model for edge and inpaint models
+        """
+
         torch.save({
             'iteration': self.iteration,
             'generator': self.edge_model.generator.state_dict()
@@ -392,6 +420,14 @@ class EdgeConnect():
         }, cfg.inpaint_disc_path)
 
     def load(self):
+        """
+        Input:
+            none
+        Output:
+            none
+        Description:
+            Load 4 pytorch model for edge an inpaint models for training
+        """
         edgeDisc = torch.load(cfg.edge_disc_path, map_location=lambda storage, loc: storage)
         edgeGen = torch.load(cfg.edge_gen_path, map_location=lambda storage, loc: storage)
         inpaintDisc = torch.load(cfg.inpaint_disc_path, map_location=lambda storage, loc: storage)

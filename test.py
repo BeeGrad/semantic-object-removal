@@ -16,6 +16,8 @@ if (cfg.test_mask_method == "freely_select_from_image"):
 if (cfg.test_mask_method == "select_by_edge"):
     input_image = select_by_edge(original_image)
 
+# Opencv saves image channels as BGR, from now on to show those images correctly
+# We convert images BGR2RGB
 original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
 input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
 
@@ -25,7 +27,7 @@ if (cfg.test_inpaint_method == "Mathematical"):
 
 if (cfg.test_inpaint_method == "EdgeConnect"):
     inpaint = EdgeConnect()
-    output, edge, edge_generated = inpaint.single_test(input_image, mask, img_gray, edge_org)
+    output, edge_generated = inpaint.single_test(input_image, mask, img_gray, edge_org)
 
 
 # print(calculate_psnr(input_image, original_image))
@@ -37,9 +39,9 @@ plt.imshow(original_image)
 fig.add_subplot(3, 2, 2)
 plt.imshow(input_image)
 fig.add_subplot(3, 2, 3)
-plt.imshow(edge_org)
+plt.imshow(img_gray)
 fig.add_subplot(3, 2, 4)
-plt.imshow(edge)
+plt.imshow(edge_org)
 fig.add_subplot(3, 2, 5)
 plt.imshow(edge_generated)
 fig.add_subplot(3, 2, 6)

@@ -11,7 +11,10 @@ def freely_select_from_image(org_img):
         Input:
             original_image
         Output:
-            masked_image
+            masked_image: input image for network
+            mask: mask that is used on image
+            image_gray: gray version if mask masked_image
+            edge: edge map of masked_image
         Description:
             Freely remove any area from image.
         """
@@ -53,11 +56,20 @@ def freely_select_from_image(org_img):
         if k == 27:
             break
 
-    mask = cv2.subtract(img[:,:,0], org_img[:,:,0]) # Renkler karisiyor ama sadece maske lazim oldugu icin onemseme su an
+    mask = cv2.subtract(img[:,:,0], org_img[:,:,0])
     ret,mask = cv2.threshold(mask,1,255,cv2.THRESH_BINARY)
     return img, mask, image_gray, edge
 
 def select_by_edge(org_img):
+    """
+    Input:
+        org_img: unmasked image
+    Output:
+        masked_image
+    Description:
+        This function is not workin currently, it returns the org_img
+        Should find a way to select by contours.
+    """
     img = org_img.copy()
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
