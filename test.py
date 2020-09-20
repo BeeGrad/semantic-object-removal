@@ -1,3 +1,6 @@
+import os
+import subprocess
+import glob
 import cv2
 import numpy as np
 from utils.utils import calculate_psnr
@@ -5,15 +8,18 @@ from utils.testutils import freely_select_from_image, select_by_edge
 from scripts.config import Config
 from models.mathematicalmodels.model import InpaintMathematical
 from models.edgeconnect.model import EdgeConnect
+from models.gmcnn.network import InpaintingModel_GMCNN
 from matplotlib import pyplot as plt
+from utils.utils import generate_rect_mask, generate_stroke_mask, getLatest
+from scripts.gmcnn_options import TestOptions
 
 cfg = Config()
 original_image = cv2.imread(cfg.test_im_path)
 
-if (cfg.test_mask_method == "freely_select_from_image"):
+if cfg.test_mask_method == "freely_select_from_image":
     input_image, mask, img_gray, edge_org = freely_select_from_image(original_image)
 
-if (cfg.test_mask_method == "select_by_edge"):
+if cfg.test_mask_method == "select_by_edge":
     input_image = select_by_edge(original_image)
 
 # Opencv saves image channels as BGR, from now on to show those images correctly
@@ -21,19 +27,23 @@ if (cfg.test_mask_method == "select_by_edge"):
 original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
 input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
 
-if (cfg.test_inpaint_method == "Mathematical"):
+if cfg.test_inpaint_method == "Mathematical":
     inpaint = InpaintMathematical(input_image, mask, cfg.freely_select_mask_size)
     output = inpaint.run()
 
-if (cfg.test_inpaint_method == "EdgeConnect"):
+if cfg.test_inpaint_method == "EdgeConnect":
     inpaint = EdgeConnect()
     output, edge_generated = inpaint.single_test(input_image, mask, img_gray, edge_org)
+
+if cfg.test_inpaint_method == "GenerativeCNN":
+    inpaint = GenerativeCNN()
+    output = inpaint.single_test(input_image, mask)
 
 
 # print(calculate_psnr(input_image, original_image))
 # print(calculate_psnr(output, original_image))
 
-fig=plt.figure(figsize=(3, 2))
+fig = plt.figure(figsize=(3, 2))
 fig.add_subplot(3, 2, 1)
 plt.imshow(original_image)
 fig.add_subplot(3, 2, 2)
