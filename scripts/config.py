@@ -30,7 +30,7 @@ class Config():
                 -lines
                 -10-20percentage
                 '''
-        self.show_sample_data = True
+        self.show_sample_data = False
         ''' Choose if a sample from dataset will be shown before training'''
         self.show_masked_data = False
         ''' Choose if a sample from masked data will be shown before training'''
@@ -40,9 +40,10 @@ class Config():
         ''' Maximum value in an image, necessary to calculate PSNR '''
 
         # Model Parameters
-        self.model = "EdgeConnect"
+        self.model = "Contextual"
         ''' Current Choices for Deep Learning Models:
                 -EdgeConnect
+                -Contextual
                 '''
         self.saveName = f"{self.model}Model"
         ''' Save name that is going to be used while training '''
@@ -80,8 +81,8 @@ class Config():
          '''
         self.freely_select_mask_size = 15
         ''' Size of the brush for freely select method '''
-        self.thresh1 = 200
-        self.thresh2 = 250
+        self.thresh1 = 50
+        self.thresh2 = 100
         ''' Threshold values for canny edge detection '''
         self.test_inpaint_method = 'EdgeConnect'
         ''' Method to inpaint the test image
@@ -94,10 +95,26 @@ class Config():
         self.test_inpaint_disc_path = f"../saves/{self.saveName}/pretrainedPaper/InpaintDiscriminator.pth"
         ''' Save locations for generator and discriminator for edge and inpaint models for test'''
 
-
         # Traditional Models parameters
         self.mathematical_method = "navier-strokes"
         ''' Method to use in mathematical inpainting
             - navier-strokes
             - fast-marching
          '''
+
+         # Contextual Generative Model parameters
+        self.context_activation = 'elu'
+        ''' Activation function that is going to be used in training of generative contual CNN
+            -elu
+            -relu
+            -lrelu
+        '''
+        self.context_conv_type = 'normal'
+        ''' Convolution layer type for contextual model
+         -normal
+         -transpose
+        '''
+        self.context_input_dim = 3
+        self.context_gen_feat_dim = 32
+        self.context_dis_feat_dim = 32
+        ''' Input and output sizes for gen and dis networks '''

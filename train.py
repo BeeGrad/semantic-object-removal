@@ -3,6 +3,7 @@
 from scripts.dataOperations import DataRead
 from scripts.config import Config
 from models.edgeconnect.model import EdgeConnect
+from models.contextual.network import CoarseGenerator
 
 
 cfg = Config()
@@ -12,11 +13,14 @@ data.create_data_loaders()
 if cfg.show_sample_data:
     data.show_sample_data()
 
-if cfg.show_masked_data:
+elif cfg.show_masked_data:
     data.show_masked_and_original()
 
 if cfg.model == "EdgeConnect":
     edgeConnectModel = EdgeConnect(data.train_data_loader, data.test_data_loader)
     edgeConnectModel.train()
+
+elif cfg.model == "Contextual":
+    contextualModel = CoarseGenerator()
 
 print(f"Training for {cfg.model} model is completed!")
