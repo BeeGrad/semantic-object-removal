@@ -3,7 +3,7 @@
 from scripts.dataOperations import DataRead
 from scripts.config import Config
 from models.edgeconnect.model import EdgeConnect
-from models.contextual.network import GlobalDis, DisConvModule, Generator, ContextualAttention
+from models.contextual.model import GenerativeContextual
 
 
 cfg = Config()
@@ -21,9 +21,7 @@ if cfg.model == "EdgeConnect":
     edgeConnectModel.train()
 
 elif cfg.model == "Contextual":
-    contextualModel = DisConvModule()
-    s = GlobalDis()
-    g = Generator()
-    c = ContextualAttention()
+    contextualModel = GenerativeContextual(data.train_data_loader, data.test_data_loader)
+    contextualModel.run()
 
 print(f"Training for {cfg.model} model is completed!")

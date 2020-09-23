@@ -118,3 +118,5 @@ class Config():
         self.context_gen_feat_dim = 32
         self.context_dis_feat_dim = 32
         ''' Input and output sizes for gen and dis networks '''
+        self.use_cuda = False
+        ''' Choose to use cuda '''

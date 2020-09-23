@@ -1,7 +1,9 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.nn.utils import spectral_norm as spectral_norm_fn
 from scripts.config import Config
+from utils.utils import extract_image_patches, flow_to_image, reduce_sum, reduce_mean, same_padding
 
 cfg = Config()
 
@@ -72,7 +74,7 @@ class ContextualAttention(nn.Module):
         self.fuse_k = fuse_k
         self.softmax_scale = softmax_scale
         self.fuse = fuse
-        self.use_cuda = use_cuda
+        self.use_cuda = cfg.use_cuda
         self.device_ids = device_ids
 
     def forward(self, f, b, mask=None):
@@ -109,8 +111,8 @@ class ContextualAttention(nn.Module):
 
         # downscaling foreground option: downscaling both foreground and
         # background for matching and use original background for reconstruction.
-        f = F.interpolate(f, scale_factor=1./self.rate, mode='nearest')
-        b = F.interpolate(b, scale_factor=1./self.rate, mode='nearest')
+        f = nn.Upsample(scale_factor=1./self.rate, mode='nearest')(f)
+        b = nn.Upsample(scale_factor=1./self.rate, mode='nearest')(b)
         int_fs = list(f.size())     # b*c*h*w
         int_bs = list(b.size())
         f_groups = torch.split(f, 1, dim=0)  # split tensors along the batch dimension
@@ -130,7 +132,7 @@ class ContextualAttention(nn.Module):
             if self.use_cuda:
                 mask = mask.cuda()
         else:
-            mask = F.interpolate(mask, scale_factor=1./(4*self.rate), mode='nearest')
+            mask = nn.Upsample(scale_factor=1./(4*self.rate), mode='nearest')(mask)
         int_ms = list(mask.size())
         # m shape: [N, C*k*k, L]
         m = extract_image_patches(mask, ksizes=[self.ksize, self.ksize],
@@ -229,14 +231,14 @@ class ContextualAttention(nn.Module):
         # flow = torch.from_numpy(highlight_flow((offsets * mask.long()).cpu().data.numpy()))
 
         if self.rate != 1:
-            flow = F.interpolate(flow, scale_factor=self.rate*4, mode='nearest')
+            flow = nn.Upsample(scale_factor=self.rate*4, mode='nearest')(flow)
 
         return y, flow
 
 class CoarseGenerator(nn.Module):
     def __init__(self):
         super(CoarseGenerator, self).__init__()
-        self.use_cuda = True
+        self.use_cuda = cfg.use_cuda
         self.device_ids = None
 
         self.conv1 = gen_conv(cfg.context_input_dim + 2, cfg.context_gen_feat_dim, 5, 1, 2)
@@ -281,11 +283,11 @@ class CoarseGenerator(nn.Module):
         x = self.conv10_atrous(x)
         x = self.conv11(x)
         x = self.conv12(x)
-        x = F.interpolate(x, scale_factor=2, mode='nearest')
+        x = nn.Upsample(scale_factor=2, mode='nearest')(x)
         # cfg.context_gen_feat_dim*2 x 128 x 128
         x = self.conv13(x)
         x = self.conv14(x)
-        x = F.interpolate(x, scale_factor=2, mode='nearest')
+        x = nn.Upsample(scale_factor=2, mode='nearest')(x)
         # cfg.context_gen_feat_dim x 256 x 256
         x = self.conv15(x)
         x = self.conv16(x)
@@ -298,7 +300,7 @@ class CoarseGenerator(nn.Module):
 class FineGenerator(nn.Module):
     def __init__(self):
         super(FineGenerator, self).__init__()
-        self.use_cuda = True
+        self.use_cuda = cfg.use_cuda
         self.device_ids = None
 
         # 3 x 256 x 256
@@ -373,10 +375,10 @@ class FineGenerator(nn.Module):
         # merge two branches
         x = self.allconv11(x)
         x = self.allconv12(x)
-        x = F.interpolate(x, scale_factor=2, mode='nearest')
+        x = nn.Upsample(scale_factor=2, mode='nearest')(x)
         x = self.allconv13(x)
         x = self.allconv14(x)
-        x = F.interpolate(x, scale_factor=2, mode='nearest')
+        x = nn.Upsample(scale_factor=2, mode='nearest')(x)
         x = self.allconv15(x)
         x = self.allconv16(x)
         x = self.allconv17(x)
@@ -387,7 +389,7 @@ class FineGenerator(nn.Module):
 class GlobalDis(nn.Module):
     def __init__(self):
         super(GlobalDis, self).__init__()
-        self.use_cuda = True
+        self.use_cuda = cfg.use_cuda
         self.device_ids = None
 
         self.dis_conv_module = DisConvModule()
@@ -404,7 +406,7 @@ class GlobalDis(nn.Module):
 class DisConvModule(nn.Module):
     def __init__(self):
         super(DisConvModule, self).__init__()
-        self.use_cuda = True
+        self.use_cuda = cfg.use_cuda
         self.device_ids = None
 
         self.conv1 = dis_conv(cfg.context_input_dim, cfg.context_dis_feat_dim, 5, 2, 2)
