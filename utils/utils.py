@@ -207,3 +207,80 @@ def reduce_sum(x, axis=None, keepdim=False):
     for i in sorted(axis, reverse=True):
         x = torch.sum(x, dim=i, keepdim=keepdim)
     return x
+
+def random_bbox():
+    """
+    Input:
+        none
+    Output:
+        tuple: (top, left, height, width)
+    Description:
+        Generate a random tlhw with configuration.
+    """
+    img_height, img_width, _ = cfg.context_image_shape
+    h, w = cfg.context_mask_shape
+    margin_height, margin_width = cfg.context_margin
+    maxt = img_height - margin_height - h
+    maxl = img_width - margin_width - w
+    bbox_list = []
+    if cfg.mask_batch_same:
+        t = np.random.randint(margin_height, maxt)
+        l = np.random.randint(margin_width, maxl)
+        bbox_list.append((t, l, h, w))
+        bbox_list = bbox_list * cfg.context_batch_size
+    else:
+        for i in range(cfg.context_batch_size):
+            t = np.random.randint(margin_height, maxt)
+            l = np.random.randint(margin_width, maxl)
+            bbox_list.append((t, l, h, w))
+
+    return torch.tensor(bbox_list, dtype=torch.int64)
+
+def local_patch(x, bbox_list):
+    """
+    Input:
+
+    Output:
+
+    Description:
+
+    """
+    assert len(x.size()) == 4
+    patches = []
+    for i, bbox in enumerate(bbox_list):
+        t, l, h, w = bbox
+        patches.append(x[i, :, t:t + h, l:l + w])
+    return torch.stack(patches, dim=0)
+
+def spatial_discounting_mask():
+    """Generate spatial discounting mask constant.
+
+    Spatial discounting mask is first introduced in publication:
+        Generative Image Inpainting with Contextual Attention, Yu et al.
+
+    Args:
+        config: Config should have configuration including HEIGHT, WIDTH,
+            DISCOUNTED_MASK.
+
+    Returns:
+        tf.Tensor: spatial discounting mask
+
+    """
+    gamma = cfg.spatial_discounting_mask
+    height, width = cfg.context_mask_shape
+    shape = [1, 1, height, width]
+    if cfg.discounted_mask:
+        mask_values = np.ones((height, width))
+        for i in range(height):
+            for j in range(width):
+                mask_values[i, j] = max(
+                    gamma ** min(i, height - i),
+                    gamma ** min(j, width - j))
+        mask_values = np.expand_dims(mask_values, 0)
+        mask_values = np.expand_dims(mask_values, 0)
+    else:
+        mask_values = np.ones(shape)
+    spatial_discounting_mask_tensor = torch.tensor(mask_values, dtype=torch.float32)
+    if cfg.use_cuda:
+        spatial_discounting_mask_tensor = spatial_discounting_mask_tensor.cuda()
+    return spatial_discounting_mask_tensor

@@ -51,10 +51,10 @@ class Config():
         ''' Choose to load model '''
         self.loadName = f"{self.model}Model"
         ''' Load name to load the pre-trained model '''
-        self.LR = 0.0001
-        self.BETA1 = 0.0
-        self.BETA2 = 0.9
-        self.D2G_LR = 0.1
+        self.edge_LR = 0.0001
+        self.edge_BETA1 = 0.0
+        self.edge_BETA2 = 0.9
+        self.edge_D2G_LR = 0.1
         ''' Learnin rate and Beta parameters for training'''
         self.GAN_LOSS = "nsgan"
         ''' Possible Choices :nsgan | lsgan | hinge '''
@@ -120,3 +120,26 @@ class Config():
         ''' Input and output sizes for gen and dis networks '''
         self.use_cuda = False
         ''' Choose to use cuda '''
+        self.context_LR = 0.0001
+        self.context_BETA1 = 0.5
+        self.context_BETA2 = 0.9
+        ''' Optimizer parameters '''
+        self.context_image_shape = [256,256,3]
+        self.context_mask_shape = [128,128]
+        self.context_margin = [0,0]
+        self.mask_batch_same = True
+        self.context_batch_size = 1
+        ''' Random bbox parameters '''
+        self.context_global_wgan_loss_alpha = 1.0
+        ''' Context train parameters '''
+        self.n_critic = 5
+        ''' iteration number to compute g loss '''
+        self.spatial_discounting_mask = 0.9
+        self.discounted_mask = True
+        ''' Spatial discounting mask parameters '''
+        self.coarse_l1_alpha = 1.2
+        self.context_l1_loss_alpha =1.2
+        self.context_ae_loss_alpha =1.2
+        self.context_gan_loss_alpha =0.001
+        self.context_wgan_gp_lambda = 10
+        ''' Context train parameters '''

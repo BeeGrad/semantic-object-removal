@@ -50,10 +50,10 @@ class EdgeModel(BaseModel):
         self.adversarial_loss = AdversarialLoss(type=cfg.GAN_LOSS)
 
         self.gen_optimizer = optim.Adam(params=self.generator.parameters(),
-            lr=float(cfg.LR), betas=(cfg.BETA1, cfg.BETA2))
+            lr=float(cfg.edge_LR), betas=(cfg.edge_BETA1, cfg.edge_BETA2))
 
         self.dis_optimizer = optim.Adam(params=self.discriminator.parameters(),
-            lr=float(cfg.LR) * float(cfg.D2G_LR), betas=(cfg.BETA1, cfg.BETA2))
+            lr=float(cfg.edge_LR) * float(cfg.edge_D2G_LR), betas=(cfg.edge_BETA1, cfg.edge_BETA2))
 
     def step(self, images, edges, masks):
         """
@@ -173,10 +173,10 @@ class InpaintingModel(BaseModel):
         self.adversarial_loss = AdversarialLoss(type=cfg.GAN_LOSS)
 
         self.gen_optimizer = optim.Adam(params=self.generator.parameters(),
-            lr=float(cfg.LR), betas=(cfg.BETA1, cfg.BETA2))
+            lr=float(cfg.edge_LR), betas=(cfg.edge_BETA1, cfg.edge_BETA2))
 
         self.dis_optimizer = optim.Adam(params=self.discriminator.parameters(),
-            lr=float(cfg.LR) * float(cfg.D2G_LR), betas=(cfg.BETA1, cfg.BETA2))
+            lr=float(cfg.edge_LR) * float(cfg.edge_D2G_LR), betas=(cfg.edge_BETA1, cfg.edge_BETA2))
 
     def step(self, images, edges, masks):
         """
