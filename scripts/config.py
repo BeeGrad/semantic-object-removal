@@ -32,7 +32,7 @@ class Config():
                 '''
         self.show_sample_data = False
         ''' Choose if a sample from dataset will be shown before training'''
-        self.show_masked_data = False
+        self.show_masked_data = True
         ''' Choose if a sample from masked data will be shown before training'''
         self.SIGMA = 1
         ''' Parameter for canny edge detector '''
@@ -40,7 +40,7 @@ class Config():
         ''' Maximum value in an image, necessary to calculate PSNR '''
 
         # Model Parameters
-        self.model = "Contextual"
+        self.model = "EdgeConnect"
         ''' Current Choices for Deep Learning Models:
                 -EdgeConnect
                 -Contextual

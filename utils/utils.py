@@ -253,18 +253,16 @@ def local_patch(x, bbox_list):
     return torch.stack(patches, dim=0)
 
 def spatial_discounting_mask():
-    """Generate spatial discounting mask constant.
-
-    Spatial discounting mask is first introduced in publication:
-        Generative Image Inpainting with Contextual Attention, Yu et al.
-
-    Args:
+    """
+    Input:
         config: Config should have configuration including HEIGHT, WIDTH,
-            DISCOUNTED_MASK.
-
-    Returns:
+        DISCOUNTED_MASK.
+    Output:
         tf.Tensor: spatial discounting mask
-
+    Description:
+        Generate spatial discounting mask constant.
+        Spatial discounting mask is first introduced in publication:
+            Generative Image Inpainting with Contextual Attention, Yu et al.
     """
     gamma = cfg.spatial_discounting_mask
     height, width = cfg.context_mask_shape
