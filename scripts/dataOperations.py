@@ -1,6 +1,7 @@
 import pickle
 import torch
 import numpy as np
+import torchvision
 from matplotlib import pyplot as plt
 import random
 import cv2
@@ -73,20 +74,20 @@ class DataRead():
             self.data = data
 
         elif self.dataset == "places2":
-            self.path = "../datasets/places2"
+            self.org_path = "../../datasets/data_256"
             imgs = []
             ctr = 0
+            for f in os.listdir(self.org_path):
+                self.org2_path = os.path.join(self.org_path,f)
+                for fold in os.listdir(self.org2_path):
+                    self.path = os.path.join(self.org2_path,fold)
+                    for filename in os.listdir(self.path):
+                        img = cv2.imread(os.path.join(self.path,filename))
+                        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                        if img is not None:
+                            imgs.append(img)
 
-            for filename in os.listdir(self.path):
-                img = cv2.imread(os.path.join(self.path,filename))
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                if img is not None:
-                    imgs.append(img)
-                    # print(f"Image {filename} is loaded")
-
-                if ctr == 1000:
-                    break
-                ctr += 1
+                        ctr += 1
 
             self.data = np.array(imgs)
 
@@ -280,6 +281,10 @@ class DataRead():
             Creates necessary data laoders for pytorch with specified batch size.
         """
 
+        dataset = torchvision.datasets.ImageFolder(root='../../datasets/data_256')
+        train_loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=4, drop_last=True)
+        print(len(train_loader))
+        exit()
         self.get_data()
         self.create_masked_data()
 
