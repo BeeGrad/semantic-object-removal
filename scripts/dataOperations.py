@@ -139,7 +139,7 @@ class DataRead():
             edge = self.edges[sample]
             mask = mask.squeeze()
             edge = edge.squeeze()
-            fig=plt.figure(figsize=(1, 2))
+            fig=plt.figure(figsize=(2, 2))
             fig.add_subplot(2, 2, 1)
             plt.imshow(im.permute(1,2,0).numpy())
             fig.add_subplot(2, 2, 2)
@@ -263,9 +263,7 @@ class DataRead():
             dataset, batch_size=self.batch_size
         )
 
-        self.data = torch.FloatTensor(self.data)
-        self.masked_data = torch.FloatTensor(self.masked_data)
-        dataset = torch.utils.data.TensorDataset(self.masked_data) ## Buraya daha sonra bir bak hata var gibi
+        dataset = torch.utils.data.TensorDataset(self.masked_data)
         self.test_data_loader = torch.utils.data.DataLoader(
             dataset, batch_size=self.batch_size
         )
@@ -308,9 +306,7 @@ class DataRead():
             dataset, batch_size=self.batch_size
         )
 
-        self.data = torch.FloatTensor(self.data)
-        self.masked_data = torch.FloatTensor(self.masked_data)
-        dataset = torch.utils.data.TensorDataset(self.masked_data) ## Buraya daha sonra bir bak hata var gibi
+        dataset = torch.utils.data.TensorDataset(self.masked_data)
         self.test_data_loader = torch.utils.data.DataLoader(
             dataset, batch_size=self.batch_size
         )

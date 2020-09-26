@@ -98,7 +98,7 @@ class EdgeModel(BaseModel):
         gen_input_fake = torch.cat((images, outputs), dim=1)
         gen_fake, gen_fake_feat = self.discriminator(gen_input_fake)        # in: (grayscale(1) + edge(1))
         gen_gan_loss = self.adversarial_loss(gen_fake, True, False)
-        gen_loss += gen_gan_loss
+        gen_loss = gen_loss + gen_gan_loss
 
 
         # generator feature matching loss
@@ -106,7 +106,7 @@ class EdgeModel(BaseModel):
         for i in range(len(dis_real_feat)):
             gen_fm_loss += self.l1_loss(gen_fake_feat[i], dis_real_feat[i].detach())
         gen_fm_loss = gen_fm_loss * cfg.FM_LOSS_WEIGHT
-        gen_loss += gen_fm_loss
+        gen_loss = gen_loss.clone() + gen_fm_loss
 
 
         # create logs
@@ -146,11 +146,11 @@ class EdgeModel(BaseModel):
         """
 
         if dis_loss is not None:
-            dis_loss.backward()
-        self.dis_optimizer.step()
-
+            dis_loss.backward(retain_graph=True)
         if gen_loss is not None:
-            gen_loss.backward()
+            gen_loss.backward(retain_graph=True)
+
+        self.dis_optimizer.step()
         self.gen_optimizer.step()
 
 class InpaintingModel(BaseModel):
@@ -216,36 +216,25 @@ class InpaintingModel(BaseModel):
         dis_fake_loss = self.adversarial_loss(dis_fake, False, True)
         dis_loss += (dis_real_loss + dis_fake_loss) / 2
 
-
-        # generator adversarial loss
-        gen_input_fake = outputs
-        gen_fake, _ = self.discriminator(gen_input_fake)        # in: (grayscale(1) + edge(1))
-        gen_gan_loss = self.adversarial_loss(gen_fake, True, False)
-        gen_loss += gen_gan_loss
-
-
         # generator adversarial loss
         gen_input_fake = outputs
         gen_fake, _ = self.discriminator(gen_input_fake)                    # in: [rgb(3)]
         gen_gan_loss = self.adversarial_loss(gen_fake, True, False) * cfg.INPAINT_ADV_LOSS_WEIGHT
-        gen_loss += gen_gan_loss
-
+        gen_loss = gen_loss + gen_gan_loss
 
         # generator l1 loss
         gen_l1_loss = self.l1_loss(outputs, images) * cfg.L1_LOSS_WEIGHT / torch.mean(masks)
-        gen_loss += gen_l1_loss
-
+        gen_loss = gen_loss + gen_l1_loss
 
         # generator perceptual loss
         gen_content_loss = self.perceptual_loss(outputs, images)
         gen_content_loss = gen_content_loss * cfg.CONTENT_LOSS_WEIGHT
-        gen_loss += gen_content_loss
-
+        gen_loss = gen_loss + gen_content_loss
 
         # generator style loss
         gen_style_loss = self.style_loss(outputs * masks, images * masks)
         gen_style_loss = gen_style_loss * cfg.STYLE_LOSS_WEIGHT
-        gen_loss += gen_style_loss
+        gen_loss = gen_loss + gen_style_loss
 
 
         # create logs
@@ -284,10 +273,10 @@ class InpaintingModel(BaseModel):
         Description:
             step both optimizers
         """
-        dis_loss.backward()
-        self.dis_optimizer.step()
+        dis_loss.backward(retain_graph=True)
+        gen_loss.backward(retain_graph=True)
 
-        gen_loss.backward()
+        self.dis_optimizer.step()
         self.gen_optimizer.step()
 
 class EdgeConnect():
@@ -380,6 +369,17 @@ class EdgeConnect():
         for i in range(self.iteration, cfg.epoch_num):
             self.iteration += 1
             for images, images_gray, masks, edges in self.train_loader:
+                # fig=plt.figure(figsize=(2, 2))
+                # fig.add_subplot(2, 2, 1)
+                # plt.imshow(images.squeeze().permute(1,2,0).numpy())
+                # fig.add_subplot(2, 2, 2)
+                # plt.imshow(images_gray.squeeze().numpy(), cmap='gray')
+                # fig.add_subplot(2, 2, 3)
+                # plt.imshow(masks.squeeze().numpy(), cmap='gray')
+                # fig.add_subplot(2, 2, 4)
+                # plt.imshow(edges.squeeze().numpy(), cmap='gray')
+                # plt.show()
+
                 e_outputs, e_gen_loss, e_dis_loss, e_logs = self.edge_model.step(images_gray, edges, masks)
                 e_outputs = e_outputs * masks + edges * (1 - masks)
                 i_outputs, i_gen_loss, i_dis_loss, i_logs = self.inpaint_model.step(images, e_outputs, masks)
@@ -387,8 +387,8 @@ class EdgeConnect():
 
                 self.inpaint_model.backward(i_gen_loss, i_dis_loss)
                 self.edge_model.backward(e_gen_loss, e_dis_loss)
-            break
 
+            print(f"Epoch {self.iteration} is done!")
             self.save()
 
     def save(self):

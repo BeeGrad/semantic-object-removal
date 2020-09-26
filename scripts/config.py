@@ -32,7 +32,7 @@ class Config():
                 '''
         self.show_sample_data = False
         ''' Choose if a sample from dataset will be shown before training'''
-        self.show_masked_data = True
+        self.show_masked_data = False
         ''' Choose if a sample from masked data will be shown before training'''
         self.SIGMA = 1
         ''' Parameter for canny edge detector '''
