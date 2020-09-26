@@ -23,7 +23,7 @@ class Config():
                 -places2
                 -cifar10
                 '''
-        self.batch_size = 1
+        self.batch_size = 10
         ''' Batch Size for DataLoader '''
         self.masking_type = "10-20percentage"
         ''' Current Choices for masking types:
@@ -32,9 +32,9 @@ class Config():
                 '''
         self.show_sample_data = False
         ''' Choose if a sample from dataset will be shown before training'''
-        self.show_masked_data = True
+        self.show_masked_data = False
         ''' Choose if a sample from masked data will be shown before training'''
-        self.SIGMA = 1
+        self.SIGMA = 2
         ''' Parameter for canny edge detector '''
         self.max_pixel_value = 255.0
         ''' Maximum value in an image, necessary to calculate PSNR '''

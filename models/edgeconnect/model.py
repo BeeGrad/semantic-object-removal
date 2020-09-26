@@ -291,10 +291,7 @@ class InpaintingModel(BaseModel):
         self.gen_optimizer.step()
 
 class EdgeConnect():
-    def __init__(self, train_data_loader = None, test_data_loader = None):
-        self.train_loader = train_data_loader
-        self.test_data_loader = test_data_loader
-
+    def __init__(self):
         self.edge_model = EdgeModel().to(cfg.DEVICE)
         self.inpaint_model = InpaintingModel().to(cfg.DEVICE)
 
@@ -366,7 +363,7 @@ class EdgeConnect():
 
         return output_image.detach().numpy(), e_outputs.detach().numpy()
 
-    def train(self):
+    def train(self, data):
         """
         Input:
             none
@@ -375,11 +372,27 @@ class EdgeConnect():
         Description:
             Trains both edge and inpaint model in order then update the parameters
         """
+        data.create_data_loaders()
+
         if cfg.loadModel:
             self.load()
+
         for i in range(self.iteration, cfg.epoch_num):
             self.iteration += 1
-            for images, images_gray, masks, edges in self.train_loader:
+            for images in data.train_loader:
+                images,images_gray, edges, masks = data.return_inputs(images[0])
+
+                fig=plt.figure(figsize=(2, 2))
+                fig.add_subplot(2, 2, 1)
+                plt.imshow(images[0].permute(1,2,0).numpy())
+                fig.add_subplot(2, 2, 2)
+                plt.imshow(images_gray[0].squeeze().numpy(), cmap='gray')
+                fig.add_subplot(2, 2, 3)
+                plt.imshow(masks[0].squeeze().numpy(), cmap='gray')
+                fig.add_subplot(2, 2, 4)
+                plt.imshow(edges[0].squeeze().numpy(), cmap='gray')
+                plt.show()
+
                 e_outputs, e_gen_loss, e_dis_loss, e_logs = self.edge_model.step(images_gray, edges, masks)
                 e_outputs = e_outputs * masks + edges * (1 - masks)
                 i_outputs, i_gen_loss, i_dis_loss, i_logs = self.inpaint_model.step(images, e_outputs, masks)

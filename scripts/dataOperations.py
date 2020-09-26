@@ -151,7 +151,7 @@ class DataRead():
             plt.imshow(edge.numpy(), cmap='gray')
             plt.show()
 
-    def create_masked_data(self):
+    def create_masked_data(self, imgs):
         """
         Input:
             none
@@ -161,18 +161,19 @@ class DataRead():
             Creates masks in the desired method and apply them to data.
             Creates self.masked_data.
         """
-        self.masked_data = np.empty_like(self.data)
-        self.masks = np.empty_like(self.data[:, :, :, 0])
-        self.gray_data = np.empty_like(self.data[:, :, :, 0])
-        self.edges = np.empty_like(self.data[:, :, :, 0])
+        print(imgs)
+        masked_data = np.empty_like(imgs)
+        masks = np.empty_like(imgs[:, :, :, 0])
+        gray_data = np.empty_like(imgs[:, :, :, 0])
+        edges = np.empty_like(imgs[:, :, :, 0])
 
         ## Prepare masking matrix
-        image_width = self.data.shape[1]
-        image_heigth = self.data.shape[2]
-        image_channel = self.data.shape[3]
+        image_width = imgs.shape[1]
+        image_heigth = imgs.shape[2]
+        image_channel = imgs.shape[3]
 
         if self.masking_type == 'lines':
-            for img in range(self.data.shape[0]):
+            for img in range(imgs.shape[0]):
                 mask = np.full((image_width,image_heigth, image_channel), 255, np.uint8) ## White background
 
                 for _ in range(np.random.randint(1, image_width // 4)):
@@ -183,18 +184,19 @@ class DataRead():
                     # Get random thickness of the line drawn
                     thickness = np.random.randint(1, 3)
                     # Draw black line on the white mask
-                    cv2.line(mask,(x1,y1),(x2,y2),(255,255,255),thickness)
+                    cv2.line(mask,(x1,y1),(x2,y2),(1,1,1),thickness)
 
                 ## Mask the image
-                masked_image = self.data[img].copy()
-                masked_image[mask == 255] = 255
+                masked_image = imgs[img].copy()
+                masked_image[mask == 1] = 1
                 mask = mask[
                     :, :, 0
                 ]  # Mask should be 2 dimensional for the rest of the operations
-                self.masks[img] = mask
-                self.gray_data[img] = cv2.cvtColor(self.data[img], cv2.COLOR_RGB2GRAY)
-                self.edges[img] = cv2.Canny(self.gray_data[img], cfg.thresh1, cfg.thresh2)
-                self.masked_data[img] = masked_image
+                masks[img] = mask
+                gray_data[img] = cv2.cvtColor(imgs[img], cv2.COLOR_RGB2GRAY)
+                print(gray_data[img].shape)
+                edges[img] = cv2.Canny(gray_data[img], cfg.thresh1, cfg.thresh2)
+                masked_data[img] = masked_image
 
         if self.masking_type == '10-20percentage':
             coverage = np.random.uniform(3.2,4.4)
@@ -202,7 +204,7 @@ class DataRead():
             off_y = int(image_heigth // coverage)
 
 
-            for img in range(self.data.shape[0]):
+            for img in range(imgs.shape[0]):
                 start_x = np.random.randint(0, image_width-off_x)
                 start_y = np.random.randint(0, image_heigth-off_y)
 
@@ -210,21 +212,22 @@ class DataRead():
                 end_point = (start_x + off_x, start_y + off_y)
 
                 mask = np.full((image_width,image_heigth, image_channel), 0, np.uint8) ## White background
-                cv2.rectangle(mask, start_point, end_point, (255,255,255), -1)
+                cv2.rectangle(mask, start_point, end_point, (1,1,1), -1)
 
                 ## Mask the image
-                masked_image = self.data[img].copy()
-                masked_image[mask == 255] = 255
+                masked_image = imgs[img].copy()
+                masked_image[mask == 1] = 1
                 mask = mask[
                     :, :, 0
                 ]  # Mask should be 2 dimensional for the rest of the operations
-                self.masks[img] = mask
-                self.gray_data[img] = cv2.cvtColor(self.data[img], cv2.COLOR_RGB2GRAY)
-                self.edges[img] = cv2.Canny(self.gray_data[img], cfg.thresh1, cfg.thresh2)
-                self.edges[img] = np.abs(self.edges[img] - 255)
-                self.masked_data[img] = masked_image
+                masks[img] = mask
+                gray_data[img] = rgb2gray(imgs[img])
+                gray_data
+                edges[img] = canny(gray_data[img], sigma=cfg.SIGMA)
+                edges[img] = np.abs(edges[img] - 1)
+                masked_data[img] = masked_image
 
-
+        return masks, gray_data, edges, masked_data
 
     def create_data_loaders(self):
         """
@@ -233,97 +236,30 @@ class DataRead():
         Output:
             none
         Description:
-            Creates necessary data laoders for pytorch with specified batch size.
+            Creates necessary data loaders for pytorch with specified batch size.
         """
 
-        self.get_data()
-        self.create_masked_data()
+        dataset = torchvision.datasets.ImageFolder(root='../datasets/places2', transform=torchvision.transforms.ToTensor())
+        self.train_loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True, num_workers=0)
 
-        self.data = torch.FloatTensor(self.data) / 255
-        self.masked_data = torch.FloatTensor(self.masked_data) / 255
-        self.gray_data = torch.FloatTensor(self.gray_data) / 255
-        self.masks = torch.FloatTensor(self.masks) / 255
-        self.edges = torch.FloatTensor(self.edges) / 255
+    def return_inputs(self, imgs):
+        masks, gray_images, edges, masked_images = self.create_masked_data(imgs.permute(0,2,3,1).numpy())
 
-        self.gray_data = self.gray_data.unsqueeze(1)
-        self.edges = self.edges.unsqueeze(1)
-        self.masks = self.masks.unsqueeze(1)
-        self.data = self.data.permute(0, 3, 1, 2)
-        self.masked_data = self.masked_data.permute(0, 3, 1, 2)
+        imgs = torch.FloatTensor(imgs)
+        masks = torch.FloatTensor(masks)
+        gray_images = torch.FloatTensor(gray_images)
+        edges = torch.FloatTensor(edges)
+        masked_images = torch.FloatTensor(masked_images)
 
-        print(f"Masks shape: {self.masks.shape}")
-        print(f"Edges shape: {self.edges.shape}")
-        print(f"Gray_data shape: {self.gray_data.shape}")
-        print(f"masked_data shape: {self.masked_data.shape}")
-        print(f"data shape: {self.data.shape}")
+        gray_images = gray_images.unsqueeze(1)
+        edges = edges.unsqueeze(1)
+        masks = masks.unsqueeze(1)
+        masked_images = masked_images.permute(0, 3, 1, 2)
 
-        dataset = torch.utils.data.TensorDataset(
-            self.data, self.masked_data, self.gray_data, self.masks, self.edges
-        )
-        self.train_data_loader = torch.utils.data.DataLoader(
-            dataset, batch_size=self.batch_size
-        )
+        print(f"Masks shape: {masks.shape}")
+        print(f"Edges shape: {edges.shape}")
+        print(f"Gray_data shape: {gray_images.shape}")
+        print(f"masked_data shape: {masked_images.shape}")
+        print(f"data shape: {imgs.shape}")
 
-        self.data = torch.FloatTensor(self.data)
-        self.masked_data = torch.FloatTensor(self.masked_data)
-        dataset = torch.utils.data.TensorDataset(self.masked_data) ## Buraya daha sonra bir bak hata var gibi
-        self.test_data_loader = torch.utils.data.DataLoader(
-            dataset, batch_size=self.batch_size
-        )
-
-    def create_data_loaders_edgeconnect(self):
-        """
-        Input:
-            none
-        Output:
-            none
-        Description:
-            Creates necessary data laoders for pytorch with specified batch size.
-        """
-
-        dataset = torchvision.datasets.ImageFolder(root='../../datasets/data_256')
-        train_loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=4, drop_last=True)
-        print(len(train_loader))
-        exit()
-        self.get_data()
-        self.create_masked_data()
-
-        self.data = torch.FloatTensor(self.data) / 255
-        self.masked_data = torch.FloatTensor(self.masked_data) / 255
-        self.gray_data = torch.FloatTensor(self.gray_data) / 255
-        self.masks = torch.FloatTensor(self.masks) / 255
-        self.edges = torch.FloatTensor(self.edges) / 255
-
-        self.gray_data = self.gray_data.unsqueeze(1)
-        self.edges = self.edges.unsqueeze(1)
-        self.masks = self.masks.unsqueeze(1)
-        self.data = self.data.permute(0, 3, 1, 2)
-        self.masked_data = self.masked_data.permute(0, 3, 1, 2)
-
-        print(f"Masks shape: {self.masks.shape}")
-        print(f"Edges shape: {self.edges.shape}")
-        print(f"Gray_data shape: {self.gray_data.shape}")
-        print(f"masked_data shape: {self.masked_data.shape}")
-        print(f"data shape: {self.data.shape}")
-
-        dataset = torch.utils.data.TensorDataset(
-            self.data, self.gray_data, self.masks, self.edges
-        )
-        self.train_data_loader = torch.utils.data.DataLoader(
-            dataset, batch_size=self.batch_size
-        )
-
-        self.data = torch.FloatTensor(self.data)
-        self.masked_data = torch.FloatTensor(self.masked_data)
-        dataset = torch.utils.data.TensorDataset(self.masked_data) ## Buraya daha sonra bir bak hata var gibi
-        self.test_data_loader = torch.utils.data.DataLoader(
-            dataset, batch_size=self.batch_size
-        )
-
-
-if __name__ == "__main__":
-    data_class = dataRead(dataset='places2')
-    data_class.get_data()
-    data_class.show_sample_data()
-    data_class.create_masked_data()
-    data_class.show_masked_and_original()
+        return imgs, gray_images, edges, masks

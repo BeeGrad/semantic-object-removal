@@ -9,9 +9,6 @@ from models.contextual.model import GenerativeContextual
 cfg = Config()
 data = DataRead(cfg.dataset, cfg.masking_type, cfg.batch_size)
 
-if cfg.model == "EdgeConnect":
-    data.create_data_loaders_edgeconnect()
-
 if cfg.show_sample_data:
     data.show_sample_data()
 
@@ -19,8 +16,8 @@ if cfg.show_masked_data:
     data.show_masked_and_original()
 
 if cfg.model == "EdgeConnect":
-    edgeConnectModel = EdgeConnect(data.train_data_loader, data.test_data_loader)
-    edgeConnectModel.train()
+    edgeConnectModel = EdgeConnect()
+    edgeConnectModel.train(data)
 
 elif cfg.model == "Contextual":
     contextualModel = GenerativeContextual(data.train_data_loader, data.test_data_loader)
