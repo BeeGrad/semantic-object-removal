@@ -36,7 +36,7 @@ class Config():
         ''' Choose if a sample from masked data will be shown before training'''
         self.SIGMA = 1
         ''' Parameter for canny edge detector '''
-        self.max_pixel_value = 255.0
+        self.max_pixel_value = 1.0
         ''' Maximum value in an image, necessary to calculate PSNR '''
 
         # Model Parameters
@@ -47,7 +47,7 @@ class Config():
                 '''
         self.saveName = f"{self.model}Model"
         ''' Save name that is going to be used while training '''
-        self.loadModel = True
+        self.loadModel = False
         ''' Choose to load model '''
         self.loadName = f"{self.model}Model"
         ''' Load name to load the pre-trained model '''

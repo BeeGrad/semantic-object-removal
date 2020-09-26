@@ -2,13 +2,15 @@ import torch
 import numpy as np
 import math
 from scripts.config import Config
-
+import cv2
 # Math utilities for model creating, training, and testing.
 
 cfg = Config()
 
-def calculate_psnr(img1, img2):
-    mse = np.mean( (img2 - img1) ** 2 )
+def calculate_psnr(img1, img2, mask):
+    maskSize = cv2.countNonZero(mask.numpy())
+    print(maskSize)
+    mse = np.sum( (img2 - img1) ** 2 ) / (maskSize*3) # * 3 is for Channel
     if mse == 0:
         return 100
     PIXEL_MAX = cfg.max_pixel_value

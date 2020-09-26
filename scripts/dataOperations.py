@@ -306,7 +306,7 @@ class DataRead():
             dataset, batch_size=self.batch_size
         )
 
-        dataset = torch.utils.data.TensorDataset(self.masked_data)
+        dataset = torch.utils.data.TensorDataset(self.data, self.gray_data, self.masks, self.edges)
         self.test_data_loader = torch.utils.data.DataLoader(
             dataset, batch_size=self.batch_size
         )

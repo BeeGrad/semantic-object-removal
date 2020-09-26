@@ -9,6 +9,7 @@ from scripts.loss import AdversarialLoss, PerceptualLoss, StyleLoss
 from scripts.config import Config
 from skimage.feature import canny
 from skimage.color import rgb2gray
+from utils.utils import calculate_psnr
 
 cfg = Config()
 
@@ -282,7 +283,7 @@ class InpaintingModel(BaseModel):
 class EdgeConnect():
     def __init__(self, train_data_loader = None, test_data_loader = None):
         self.train_loader = train_data_loader
-        self.test_data_loader = test_data_loader
+        self.test_loader = test_data_loader
 
         self.edge_model = EdgeModel().to(cfg.DEVICE)
         self.inpaint_model = InpaintingModel().to(cfg.DEVICE)
@@ -368,6 +369,7 @@ class EdgeConnect():
             self.load()
         for i in range(self.iteration, cfg.epoch_num):
             self.iteration += 1
+            psnr_values = []
             for images, images_gray, masks, edges in self.train_loader:
                 # fig=plt.figure(figsize=(2, 2))
                 # fig.add_subplot(2, 2, 1)
@@ -388,7 +390,12 @@ class EdgeConnect():
                 self.inpaint_model.backward(i_gen_loss, i_dis_loss)
                 self.edge_model.backward(e_gen_loss, e_dis_loss)
 
+                psnr = calculate_psnr(images.squeeze().detach().numpy(), outputs_merged.squeeze().detach().numpy(), masks)
+                psnr_values.append(psnr)
+
             print(f"Epoch {self.iteration} is done!")
+            print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")
+
             self.save()
 
     def save(self):
