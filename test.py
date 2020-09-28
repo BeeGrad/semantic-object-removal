@@ -30,8 +30,9 @@ if (cfg.test_inpaint_method == "EdgeConnect"):
     output, edge_generated = inpaint.single_test(input_image, mask, img_gray, edge_org)
 
 
-# print(calculate_psnr(input_image, original_image))
-# print(calculate_psnr(output, original_image))
+# print(f"PSNR value of masked image: {calculate_psnr(input_image, original_image, mask)}")
+original_image = original_image/255
+print(f"PSNR value of inpainted image: {calculate_psnr(output, original_image, mask)}]")
 
 fig=plt.figure(figsize=(3, 2))
 fig.add_subplot(3, 2, 1)

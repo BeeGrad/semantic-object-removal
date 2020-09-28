@@ -238,9 +238,12 @@ class DataRead():
         Description:
             Creates necessary data loaders for pytorch with specified batch size.
         """
-
+        # Train
         dataset = torchvision.datasets.ImageFolder(root='../datasets/places2', transform=torchvision.transforms.ToTensor())
         self.train_loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True, num_workers=0)
+        # Test
+        dataset = torchvision.datasets.ImageFolder(root='../datasets/places2', transform=torchvision.transforms.ToTensor())
+        self.test_loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True, num_workers=0)
 
     def return_inputs(self, imgs):
         masks, gray_images, edges, masked_images = self.create_masked_data(imgs.permute(0,2,3,1).numpy())

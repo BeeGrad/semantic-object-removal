@@ -36,7 +36,7 @@ class Config():
         ''' Choose if a sample from masked data will be shown before training'''
         self.SIGMA = 2
         ''' Parameter for canny edge detector '''
-        self.max_pixel_value = 255.0
+        self.max_pixel_value = 1.0
         ''' Maximum value in an image, necessary to calculate PSNR '''
 
         # Model Parameters
@@ -81,8 +81,8 @@ class Config():
          '''
         self.freely_select_mask_size = 15
         ''' Size of the brush for freely select method '''
-        self.thresh1 = 50
-        self.thresh2 = 100
+        self.thresh1 = 200
+        self.thresh2 = 250
         ''' Threshold values for canny edge detection '''
         self.test_inpaint_method = 'EdgeConnect'
         ''' Method to inpaint the test image
