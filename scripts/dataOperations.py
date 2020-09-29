@@ -266,3 +266,63 @@ class DataRead():
         print(f"data shape: {imgs.shape}")
 
         return imgs, gray_images, edges, masks
+
+    def context_create_data_loaders(self):
+        """
+        Input:
+            none
+        Output:
+            none
+        Description:
+            Creates necessary data loaders for pytorch with specified batch size.
+        """
+        # Train
+        dataset = torchvision.datasets.ImageFolder(root='../datasets/places2', transform=torchvision.transforms.ToTensor())
+        self.train_loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.context_batch_size, shuffle=True, num_workers=0)
+        # Test
+        dataset = torchvision.datasets.ImageFolder(root='../datasets/places2', transform=torchvision.transforms.ToTensor())
+        self.test_loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.context_batch_size, shuffle=True, num_workers=0)
+
+    def return_inputs_contextual(self, imgs, bboxes):
+        masked_images, masks = self.mask_image_contextual(imgs, bboxes)
+
+        imgs = torch.FloatTensor(imgs)
+        masks = torch.FloatTensor(masks)
+        masked_images = torch.FloatTensor(masked_images)
+
+        # masked_images = masked_images.permute(0, 3, 1, 2)
+
+        print(f"Masks shape: {masks.shape}")
+        print(f"masked_data shape: {masked_images.shape}")
+        print(f"data shape: {imgs.shape}")
+        print(f"bboxes shape: {bboxes.shape}")
+
+        return imgs, masks, masked_images
+
+    def mask_image_contextual(self, imgs, bboxes):
+        height, width, _ = cfg.context_image_shape
+        max_delta_h, max_delta_w = cfg.context_max_delta_shape
+        mask = self.bbox2mask_contextual(bboxes, height, width, max_delta_h, max_delta_w)
+
+        if cfg.context_mask_type == 'hole':
+            result = imgs * (1. - mask)
+        elif cfg.context_mask_type == 'mosaic':
+            # TODO: Matching the mosaic patch size and the mask size
+            mosaic_unit_size = cfg.context_mosaic_unit_size
+            downsampled_image = F.interpolate(masked_image, scale_factor=1. / mosaic_unit_size, mode='nearest')
+            upsampled_image = F.interpolate(downsampled_image, size=(height, width), mode='nearest')
+            result = upsampled_image * mask + x * (1. - mask)
+        else:
+            raise NotImplementedError('Not implemented mask type.')
+
+        return result, mask
+
+    def bbox2mask_contextual(self, bboxes, height, width, max_delta_h, max_delta_w):
+        batch_size = bboxes.size(0)
+        mask = torch.zeros((batch_size, 1, height, width), dtype=torch.float32)
+        for i in range(batch_size):
+            bbox = bboxes[i]
+            delta_h = np.random.randint(max_delta_h // 2 + 1)
+            delta_w = np.random.randint(max_delta_w // 2 + 1)
+            mask[i, :, bbox[0] + delta_h:bbox[0] + bbox[2] - delta_h, bbox[1] + delta_w:bbox[1] + bbox[3] - delta_w] = 1.
+        return mask

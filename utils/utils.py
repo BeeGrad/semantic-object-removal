@@ -15,7 +15,6 @@ def calculate_psnr(img1, img2, mask):
     if mse == 0:
         return 100
     PIXEL_MAX = cfg.max_pixel_value
-    print(mse)
     return 20 * math.log10(PIXEL_MAX / math.sqrt(mse))
 
 def extract_image_patches(images, ksizes, strides, rates, padding='same'):

@@ -4,18 +4,16 @@ from torch import autograd
 from models.contextual.network import GlobalDis, LocalDis, Generator
 from scripts.config import Config
 from utils.utils import random_bbox, local_patch, spatial_discounting_mask
+from matplotlib import pyplot as plt
 
 cfg = Config()
 
 class GenerativeContextual(nn.Module):
-    def __init__(self, train_dataloader, test_dataloader):
+    def __init__(self):
         super(GenerativeContextual, self).__init__()
         self.GlobalDis = GlobalDis().to(cfg.DEVICE)
         self.LocalDis = LocalDis().to(cfg.DEVICE)
         self.Generator = Generator().to(cfg.DEVICE)
-
-        self.train_dataloader = train_dataloader
-        self.test_dataloader = test_dataloader
 
         self.optimizer_g = torch.optim.Adam(self.Generator.parameters(), lr=cfg.context_LR,
                                             betas=(cfg.context_BETA1, cfg.context_BETA2))
@@ -25,14 +23,26 @@ class GenerativeContextual(nn.Module):
 
         self.iteration = 0
 
-    def run(self):
+    def run(self, data):
         self.train()
         l1_loss = nn.L1Loss()
         losses = {}
 
         bboxes = random_bbox()
+        data.context_create_data_loaders()
 
-        for images, masked_images, images_gray, masks, edges in self.train_dataloader:
+        for images in data.train_loader:
+            images, masks, masked_images = data.return_inputs_contextual(images[0], bboxes)
+
+            fig=plt.figure(figsize=(1, 2))
+            fig.add_subplot(2, 2, 1)
+            plt.imshow(images[0].permute(1,2,0).numpy())
+            fig.add_subplot(2, 2, 2)
+            plt.imshow(masked_images[0].permute(1,2,0).numpy())
+            fig.add_subplot(2, 2, 3)
+            plt.imshow(masks.squeeze()[0].numpy())
+            plt.show()
+
             compute_loss_g = self.iteration % cfg.n_critic == 0
 
             if cfg.use_cuda:

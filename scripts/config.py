@@ -39,8 +39,8 @@ class Config():
         self.max_pixel_value = 1.0
         ''' Maximum value in an image, necessary to calculate PSNR '''
 
-        # Model Parameters
-        self.model = "EdgeConnect"
+        # EdgeConnect Model Parameters
+        self.model = "Contextual"
         ''' Current Choices for Deep Learning Models:
                 -EdgeConnect
                 -Contextual
@@ -128,8 +128,15 @@ class Config():
         self.context_mask_shape = [128,128]
         self.context_margin = [0,0]
         self.mask_batch_same = True
-        self.context_batch_size = 1
+        self.context_batch_size = 2
+        self.context_max_delta_shape = [32,32]
+        self.context_mosaic_unit_size = 12
         ''' Random bbox parameters '''
+        self.context_mask_type = "hole"
+        ''' Masking type for bbox2mask
+             - hole
+             - mosaic
+                '''
         self.context_global_wgan_loss_alpha = 1.0
         ''' Context train parameters '''
         self.n_critic = 5
