@@ -3,13 +3,12 @@ import numpy as np
 import math
 import cv2
 from scripts.config import Config
-
+from matplotlib import pyplot as plt
 # Math utilities for model creating, training, and testing.
 
 cfg = Config()
 
-def calculate_psnr(img1, img2, mask):
-    maskSize = cv2.countNonZero(mask)
+def calculate_psnr(img1, img2):
     mse = np.mean( (img2 - img1) ** 2 )# / (maskSize*3) # * 3 is for Channel
 
     if mse == 0:
@@ -285,3 +284,27 @@ def spatial_discounting_mask():
     if cfg.use_cuda:
         spatial_discounting_mask_tensor = spatial_discounting_mask_tensor.cuda()
     return spatial_discounting_mask_tensor
+
+def show_sample_input_data_context(img1, img2, img3):
+    fig=plt.figure(figsize=(2, 2))
+
+    fig.add_subplot(2, 2, 1)
+    plt.imshow(img1[0].permute(1,2,0).numpy())
+    fig.add_subplot(2, 2, 2)
+    plt.imshow(img2[0].permute(1,2,0).numpy())
+    fig.add_subplot(2, 2, 3)
+    plt.imshow(img3.squeeze()[0].numpy(), cmap='gray')
+    plt.show()
+
+def show_sample_input_data_edgeconnect(img1, img2, img3, img4):
+    fig=plt.figure(figsize=(2, 2))
+
+    fig.add_subplot(2, 2, 1)
+    plt.imshow(img1[0].permute(1,2,0).numpy())
+    fig.add_subplot(2, 2, 2)
+    plt.imshow(img2.squeeze()[0].numpy(), cmap='gray')
+    fig.add_subplot(2, 2, 3)
+    plt.imshow(img3.squeeze()[0].numpy(), cmap='gray')
+    fig.add_subplot(2, 2, 4)
+    plt.imshow(img4.squeeze()[0].numpy(), cmap='gray')
+    plt.show()

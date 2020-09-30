@@ -3,8 +3,8 @@ import torch.nn as nn
 from torch import autograd
 from models.contextual.network import GlobalDis, LocalDis, Generator
 from scripts.config import Config
-from utils.utils import random_bbox, local_patch, spatial_discounting_mask
-from matplotlib import pyplot as plt
+from utils.utils import random_bbox, local_patch, spatial_discounting_mask, show_sample_input_data_context, \
+                        calculate_psnr
 
 cfg = Config()
 
@@ -27,88 +27,114 @@ class GenerativeContextual(nn.Module):
         self.train()
         l1_loss = nn.L1Loss()
         losses = {}
+        psnr_values = []
+        self.epoch = 0
 
         bboxes = random_bbox()
         data.context_create_data_loaders()
 
-        for images in data.train_loader:
-            images, masks, masked_images = data.return_inputs_contextual(images[0], bboxes)
+        for epoch in range(self.epoch, cfg.epoch_num):
+            for images in data.train_loader:
+                images, masks, masked_images = data.return_inputs_contextual(images[0], bboxes)
 
-            fig=plt.figure(figsize=(1, 2))
-            fig.add_subplot(2, 2, 1)
-            plt.imshow(images[0].permute(1,2,0).numpy())
-            fig.add_subplot(2, 2, 2)
-            plt.imshow(masked_images[0].permute(1,2,0).numpy())
-            fig.add_subplot(2, 2, 3)
-            plt.imshow(masks.squeeze()[0].numpy())
-            plt.show()
+                if cfg.show_sample_data:
+                    show_sample_input_data_context(images, masked_images)
 
-            compute_loss_g = self.iteration % cfg.n_critic == 0
+                compute_loss_g = self.iteration % cfg.n_critic == 0
 
-            if cfg.use_cuda:
-                masked_images = masked_images.cuda()
-                masks = masks.cuda()
-                images = images.cuda()
+                if cfg.use_cuda:
+                    masked_images = masked_images.cuda()
+                    masks = masks.cuda()
+                    images = images.cuda()
 
-            x1, x2, offset_flow = self.Generator(masked_images, masks)
-            local_patch_gt = local_patch(images, bboxes)
-            x1_inpaint = x1 * masks + masked_images * (1. - masks)
-            x2_inpaint = x2 * masks + masked_images * (1. - masks)
-            local_patch_x1_inpaint = local_patch(x1_inpaint, bboxes)
-            local_patch_x2_inpaint = local_patch(x2_inpaint, bboxes)
+                x1, x2, offset_flow = self.Generator(masked_images, masks)
+                local_patch_gt = local_patch(images, bboxes)
+                x1_inpaint = x1 * masks + masked_images * (1. - masks)
+                x2_inpaint = x2 * masks + masked_images * (1. - masks)
+                local_patch_x1_inpaint = local_patch(x1_inpaint, bboxes)
+                local_patch_x2_inpaint = local_patch(x2_inpaint, bboxes)
 
-            # D part
-            # wgan d loss
-            local_patch_real_pred, local_patch_fake_pred = self.dis_forward(self.LocalDis, local_patch_gt, local_patch_x2_inpaint.detach())
-            global_real_pred, global_fake_pred = self.dis_forward(self.GlobalDis, images, x2_inpaint.detach())
-            losses['wgan_d'] = torch.mean(local_patch_fake_pred - local_patch_real_pred) + \
-                torch.mean(global_fake_pred - global_real_pred) * cfg.context_global_wgan_loss_alpha
+                # D part
+                # wgan d loss
+                local_patch_real_pred, local_patch_fake_pred = self.dis_forward(self.LocalDis, local_patch_gt, local_patch_x2_inpaint.detach())
+                global_real_pred, global_fake_pred = self.dis_forward(self.GlobalDis, images, x2_inpaint.detach())
+                losses['wgan_d'] = torch.mean(local_patch_fake_pred - local_patch_real_pred) + \
+                    torch.mean(global_fake_pred - global_real_pred) * cfg.context_global_wgan_loss_alpha
 
-            # gradients penalty loss
-            local_penalty = self.calc_gradient_penalty(self.LocalDis, local_patch_gt, local_patch_x2_inpaint.detach())
-            global_penalty = self.calc_gradient_penalty(self.GlobalDis, images, x2_inpaint.detach())
-            losses['wgan_gp'] = local_penalty + global_penalty
+                # gradients penalty loss
+                local_penalty = self.calc_gradient_penalty(self.LocalDis, local_patch_gt, local_patch_x2_inpaint.detach())
+                global_penalty = self.calc_gradient_penalty(self.GlobalDis, images, x2_inpaint.detach())
+                losses['wgan_gp'] = local_penalty + global_penalty
 
-            # G Part
-            if compute_loss_g:
-                sd_mask = spatial_discounting_mask()
-                losses['l1'] = l1_loss(local_patch_x1_inpaint * sd_mask, local_patch_gt * sd_mask) * \
-                    cfg.spatial_discounting_mask + l1_loss(local_patch_x2_inpaint * sd_mask, local_patch_gt * sd_mask)
-                losses['ae'] = l1_loss(x1 * (1. - masks), images * (1. - masks)) * \
-                    cfg.spatial_discounting_mask + l1_loss(x2 * (1. - masks), images * (1. - masks))
+                # G Part
+                if compute_loss_g:
+                    sd_mask = spatial_discounting_mask()
+                    losses['l1'] = l1_loss(local_patch_x1_inpaint * sd_mask, local_patch_gt * sd_mask) * \
+                        cfg.spatial_discounting_mask + l1_loss(local_patch_x2_inpaint * sd_mask, local_patch_gt * sd_mask)
+                    losses['ae'] = l1_loss(x1 * (1. - masks), images * (1. - masks)) * \
+                        cfg.spatial_discounting_mask + l1_loss(x2 * (1. - masks), images * (1. - masks))
 
-                # wgan g loss
-                local_patch_real_pred, local_patch_fake_pred = self.dis_forward(
-                    self.LocalDis, local_patch_gt, local_patch_x2_inpaint)
-                global_real_pred, global_fake_pred = self.dis_forward(
-                    self.GlobalDis, images, x2_inpaint)
-                losses['wgan_g'] = -(torch.mean(local_patch_fake_pred)) - \
-                    torch.mean(global_fake_pred) * cfg.context_global_wgan_loss_alpha
+                    # wgan g loss
+                    local_patch_real_pred, local_patch_fake_pred = self.dis_forward(
+                        self.LocalDis, local_patch_gt, local_patch_x2_inpaint)
+                    global_real_pred, global_fake_pred = self.dis_forward(
+                        self.GlobalDis, images, x2_inpaint)
+                    losses['wgan_g'] = -(torch.mean(local_patch_fake_pred)) - \
+                        torch.mean(global_fake_pred) * cfg.context_global_wgan_loss_alpha
 
-            inpainted_result = x2_inpaint
+                inpainted_result = x2_inpaint
 
-            for k in losses.keys():
-                if not losses[k].dim() == 0:
-                    losses[k] = torch.mean(losses[k])
+                for k in losses.keys():
+                    if not losses[k].dim() == 0:
+                        losses[k] = torch.mean(losses[k])
 
-            ###### Backward pass ###### Inplace hatasi veriyordu G ve D yerini degistirdim!!!
-            # Update G
-            if compute_loss_g:
-                self.optimizer_g.zero_grad()
-                losses['g'] = losses['l1'] * cfg.context_l1_loss_alpha + \
-                                losses['ae'] * cfg.context_ae_loss_alpha + \
-                                losses['wgan_g'] * cfg.context_gan_loss_alpha
-                losses['g'].backward()
-                self.optimizer_g.step()
+                ###### Backward pass ###### Inplace hatasi veriyordu G ve D yerini degistirdim!!!
+                # Update G
+                if compute_loss_g:
+                    self.optimizer_g.zero_grad()
+                    losses['g'] = losses['l1'] * cfg.context_l1_loss_alpha + \
+                                    losses['ae'] * cfg.context_ae_loss_alpha + \
+                                    losses['wgan_g'] * cfg.context_gan_loss_alpha
+                    losses['g'].backward()
+                    self.optimizer_g.step()
 
-            # Update D
-            self.optimizer_d.zero_grad()
-            losses['d'] = losses['wgan_d'] + losses['wgan_gp'] * cfg.context_wgan_gp_lambda
-            losses['d'].backward()
-            self.optimizer_d.step()
+                # Update D
+                self.optimizer_d.zero_grad()
+                losses['d'] = losses['wgan_d'] + losses['wgan_gp'] * cfg.context_wgan_gp_lambda
+                losses['d'].backward()
+                self.optimizer_d.step()
 
-            self.iteration += 1
-            break
+                self.iteration += 1
+                psnr = calculate_psnr(images.squeeze().detach().numpy(), inpainted_result.squeeze().detach().numpy(), masks)
+                psnr_values.append(psnr)
+                break
+
+            print(f"Epoch {self.iteration} is done!")
+            print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")
+            self.save()
+
+    def save(self):
+        """
+        Input:
+            none
+        Output:
+            none
+        Description:
+            Saves 3 pytroch model for localDis, globalDis and Gen
+        """
+
+        torch.save({
+            'epoch': self.epoch,
+            'generator': self.Generator.state_dict()
+        }, cfg.edge_gen_path)
+
+        torch.save({
+            'discriminator': self.LocalDis.state_dict()
+        }, cfg.edge_disc_path)
+
+        torch.save({
+            'generator': self.GlobalDis.state_dict()
+        }, cfg.inpaint_gen_path)
 
     def dis_forward(self, netD, ground_truth, x_inpaint):
         """

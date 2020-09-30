@@ -30,10 +30,8 @@ class Config():
                 -lines
                 -10-20percentage
                 '''
-        self.show_sample_data = False
+        self.show_sample_data = True
         ''' Choose if a sample from dataset will be shown before training'''
-        self.show_masked_data = False
-        ''' Choose if a sample from masked data will be shown before training'''
         self.SIGMA = 2
         ''' Parameter for canny edge detector '''
         self.max_pixel_value = 1.0
@@ -150,3 +148,7 @@ class Config():
         self.context_gan_loss_alpha =0.001
         self.context_wgan_gp_lambda = 10
         ''' Context train parameters '''
+        self.context_localdis_path = f"../saves/{self.saveName}/ourTrained/LocalDis.pth"
+        self.context_globaldis_path = f"../saves/{self.saveName}/ourTrained/GlobalDis.pth"
+        self.context_generator_path = f"../saves/{self.saveName}/ourTrained/Generator.pth"
+        ''' Model Save Paths '''

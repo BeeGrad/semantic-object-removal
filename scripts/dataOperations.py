@@ -161,7 +161,6 @@ class DataRead():
             Creates masks in the desired method and apply them to data.
             Creates self.masked_data.
         """
-        print(imgs)
         masked_data = np.empty_like(imgs)
         masks = np.empty_like(imgs[:, :, :, 0])
         gray_data = np.empty_like(imgs[:, :, :, 0])

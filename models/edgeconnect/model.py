@@ -9,7 +9,7 @@ from scripts.loss import AdversarialLoss, PerceptualLoss, StyleLoss
 from scripts.config import Config
 from skimage.feature import canny
 from skimage.color import rgb2gray
-from utils.utils import calculate_psnr
+from utils.utils import calculate_psnr, show_sample_input_data_edgeconnect
 
 cfg = Config()
 
@@ -382,17 +382,7 @@ class EdgeConnect():
             self.iteration += 1
             for images in data.train_loader:
                 images,images_gray, edges, masks = data.return_inputs(images[0])
-
-                fig=plt.figure(figsize=(2, 2))
-                fig.add_subplot(2, 2, 1)
-                plt.imshow(images[0].permute(1,2,0).numpy())
-                fig.add_subplot(2, 2, 2)
-                plt.imshow(images_gray[0].squeeze().numpy(), cmap='gray')
-                fig.add_subplot(2, 2, 3)
-                plt.imshow(masks[0].squeeze().numpy(), cmap='gray')
-                fig.add_subplot(2, 2, 4)
-                plt.imshow(edges[0].squeeze().numpy(), cmap='gray')
-                plt.show()
+                show_sample_input_data_edgeconnect(images, images_gray, edges, masks)
 
                 e_outputs, e_gen_loss, e_dis_loss, e_logs = self.edge_model.step(images_gray, edges, masks)
                 e_outputs = e_outputs * masks + edges * (1 - masks)
