@@ -12,8 +12,8 @@ class Config():
             process
         """
         # Train Parameters
-        self.DEVICE = torch.device("cpu")
-        ''' Choose to train on cpu or gpu '''
+        self.DEVICE = torch.device("cuda")
+        ''' Choose to train on cpu or cuda '''
         self.epoch_num = 100
         ''' Choose number of epochs '''
 
@@ -23,7 +23,7 @@ class Config():
                 -places2
                 -cifar10
                 '''
-        self.batch_size = 10
+        self.batch_size = 2
         ''' Batch Size for DataLoader '''
         self.masking_type = "10-20percentage"
         ''' Current Choices for masking types:
@@ -45,7 +45,7 @@ class Config():
                 '''
         self.saveName = f"{self.model}Model"
         ''' Save name that is going to be used while training '''
-        self.loadModel = True
+        self.loadModel = False
         ''' Choose to load model '''
         self.loadName = f"{self.model}Model"
         ''' Load name to load the pre-trained model '''
@@ -116,7 +116,7 @@ class Config():
         self.context_gen_feat_dim = 32
         self.context_dis_feat_dim = 32
         ''' Input and output sizes for gen and dis networks '''
-        self.use_cuda = False
+        self.use_cuda = True
         ''' Choose to use cuda '''
         self.context_LR = 0.0001
         self.context_BETA1 = 0.5
@@ -126,7 +126,7 @@ class Config():
         self.context_mask_shape = [128,128]
         self.context_margin = [0,0]
         self.mask_batch_same = True
-        self.context_batch_size = 2
+        self.context_batch_size = 5
         self.context_max_delta_shape = [32,32]
         self.context_mosaic_unit_size = 12
         ''' Random bbox parameters '''

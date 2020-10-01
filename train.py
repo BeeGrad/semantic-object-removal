@@ -11,7 +11,7 @@ data = DataRead(cfg.dataset, cfg.masking_type, cfg.batch_size)
 
 if cfg.model == "EdgeConnect":
     edgeConnectModel = EdgeConnect()
-    edgeConnectModel.train(data)
+    edgeConnectModel.run(data)
 
 elif cfg.model == "Contextual":
     contextualModel = GenerativeContextual()

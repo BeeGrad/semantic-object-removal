@@ -34,18 +34,18 @@ class GenerativeContextual(nn.Module):
         data.context_create_data_loaders()
 
         for epoch in range(self.epoch, cfg.epoch_num):
-            for images in data.train_loader:
+            for i, images in enumerate(data.train_loader):
                 images, masks, masked_images = data.return_inputs_contextual(images[0], bboxes)
 
                 if cfg.show_sample_data:
-                    show_sample_input_data_context(images, masked_images)
+                    show_sample_input_data_context(images, masked_images, masks)
+                    cfg.show_sample_data = False
 
                 compute_loss_g = self.iteration % cfg.n_critic == 0
 
-                if cfg.use_cuda:
-                    masked_images = masked_images.cuda()
-                    masks = masks.cuda()
-                    images = images.cuda()
+                masked_images = masked_images.to(cfg.DEVICE)
+                masks = masks.to(cfg.DEVICE)
+                images = images.to(cfg.DEVICE)
 
                 x1, x2, offset_flow = self.Generator(masked_images, masks)
                 local_patch_gt = local_patch(images, bboxes)
@@ -105,9 +105,10 @@ class GenerativeContextual(nn.Module):
                 self.optimizer_d.step()
 
                 self.iteration += 1
-                psnr = calculate_psnr(images.squeeze().detach().numpy(), inpainted_result.squeeze().detach().numpy(), masks)
+                psnr = calculate_psnr(images.squeeze().cpu().detach().numpy(), inpainted_result.squeeze().cpu().detach().numpy())
                 psnr_values.append(psnr)
-                break
+                if i % 10000 == 0:
+                    print(f"{i}/{len(data.train_loader) / cfg.context_batch_size}")
 
             print(f"Epoch {self.iteration} is done!")
             print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")

@@ -238,10 +238,10 @@ class DataRead():
             Creates necessary data loaders for pytorch with specified batch size.
         """
         # Train
-        dataset = torchvision.datasets.ImageFolder(root='../datasets/places2', transform=torchvision.transforms.ToTensor())
+        dataset = torchvision.datasets.ImageFolder(root='../../datasets/data_256', transform=torchvision.transforms.ToTensor())
         self.train_loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True, num_workers=0)
         # Test
-        dataset = torchvision.datasets.ImageFolder(root='../datasets/places2', transform=torchvision.transforms.ToTensor())
+        dataset = torchvision.datasets.ImageFolder(root='../../datasets/test_256', transform=torchvision.transforms.ToTensor())
         self.test_loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True, num_workers=0)
 
     def return_inputs(self, imgs):
@@ -258,11 +258,13 @@ class DataRead():
         masks = masks.unsqueeze(1)
         masked_images = masked_images.permute(0, 3, 1, 2)
 
-        print(f"Masks shape: {masks.shape}")
-        print(f"Edges shape: {edges.shape}")
-        print(f"Gray_data shape: {gray_images.shape}")
-        print(f"masked_data shape: {masked_images.shape}")
-        print(f"data shape: {imgs.shape}")
+        if cfg.show_sample_data:
+            print(f"Masks shape: {masks.shape}")
+            print(f"Edges shape: {edges.shape}")
+            print(f"Gray_data shape: {gray_images.shape}")
+            print(f"masked_data shape: {masked_images.shape}")
+            print(f"data shape: {imgs.shape}")
+            cfg.show_sample_data = False
 
         return imgs, gray_images, edges, masks
 
@@ -276,10 +278,10 @@ class DataRead():
             Creates necessary data loaders for pytorch with specified batch size.
         """
         # Train
-        dataset = torchvision.datasets.ImageFolder(root='../datasets/places2', transform=torchvision.transforms.ToTensor())
+        dataset = torchvision.datasets.ImageFolder(root='../../datasets/data_256', transform=torchvision.transforms.ToTensor())
         self.train_loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.context_batch_size, shuffle=True, num_workers=0)
         # Test
-        dataset = torchvision.datasets.ImageFolder(root='../datasets/places2', transform=torchvision.transforms.ToTensor())
+        dataset = torchvision.datasets.ImageFolder(root='../../datasets/test_256', transform=torchvision.transforms.ToTensor())
         self.test_loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.context_batch_size, shuffle=True, num_workers=0)
 
     def return_inputs_contextual(self, imgs, bboxes):
@@ -291,10 +293,12 @@ class DataRead():
 
         # masked_images = masked_images.permute(0, 3, 1, 2)
 
-        print(f"Masks shape: {masks.shape}")
-        print(f"masked_data shape: {masked_images.shape}")
-        print(f"data shape: {imgs.shape}")
-        print(f"bboxes shape: {bboxes.shape}")
+        if cfg.show_sample_data:
+            print(f"Masks shape: {masks.shape}")
+            print(f"masked_data shape: {masked_images.shape}")
+            print(f"data shape: {imgs.shape}")
+            print(f"bboxes shape: {bboxes.shape}")
+            cfg.show_sample_data = False
 
         return imgs, masks, masked_images
 

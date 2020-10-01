@@ -147,11 +147,11 @@ class EdgeModel(BaseModel):
         """
 
         if dis_loss is not None:
-            dis_loss.backward()
+            dis_loss.backward(retain_graph=True)
         self.dis_optimizer.step()
 
         if gen_loss is not None:
-            gen_loss.backward()
+            gen_loss.backward(retain_graph=True)
         self.gen_optimizer.step()
 
 class InpaintingModel(BaseModel):
@@ -285,10 +285,10 @@ class InpaintingModel(BaseModel):
         Description:
             step both optimizers
         """
-        dis_loss.backward()
+        dis_loss.backward(retain_graph=True)
         self.dis_optimizer.step()
 
-        gen_loss.backward()
+        gen_loss.backward(retain_graph=True)
         self.gen_optimizer.step()
 
 class EdgeConnect():
@@ -364,7 +364,7 @@ class EdgeConnect():
 
         return output_image.detach().numpy(), e_outputs.detach().numpy()
 
-    def train(self, data):
+    def run(self, data):
         """
         Input:
             none
@@ -374,15 +374,25 @@ class EdgeConnect():
             Trains both edge and inpaint model in order then update the parameters
         """
         data.create_data_loaders()
+        self.edge_model.train()
+        self.inpaint_model.train()
 
         if cfg.loadModel:
             self.load()
 
         for i in range(self.iteration, cfg.epoch_num):
             self.iteration += 1
-            for images in data.train_loader:
+            psnr_values = []
+            for i, images in enumerate(data.train_loader):
                 images,images_gray, edges, masks = data.return_inputs(images[0])
-                show_sample_input_data_edgeconnect(images, images_gray, edges, masks)
+                if cfg.show_sample_data:
+                    show_sample_input_data_edgeconnect(images, images_gray, edges, masks)
+                    cfg.show_sample_data = False
+
+                images = images.to(cfg.DEVICE)
+                images_gray = images_gray.to(cfg.DEVICE)
+                edges = edges.to(cfg.DEVICE)
+                masks = masks.to(cfg.DEVICE)
 
                 e_outputs, e_gen_loss, e_dis_loss, e_logs = self.edge_model.step(images_gray, edges, masks)
                 e_outputs = e_outputs * masks + edges * (1 - masks)
@@ -391,8 +401,9 @@ class EdgeConnect():
 
                 self.inpaint_model.backward(i_gen_loss, i_dis_loss)
                 self.edge_model.backward(e_gen_loss, e_dis_loss)
-                psnr = calculate_psnr(images.squeeze().detach().numpy(), outputs_merged.squeeze().detach().numpy(), masks)
+                psnr = calculate_psnr(images.squeeze().cpu().detach().numpy(), outputs_merged.squeeze().cpu().detach().numpy())
                 psnr_values.append(psnr)
+                print(f"{i}/{len(data.train_loader) / cfg.batch_size}")
 
             print(f"Epoch {self.iteration} is done!")
             print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")

@@ -111,8 +111,8 @@ class ContextualAttention(nn.Module):
 
         # downscaling foreground option: downscaling both foreground and
         # background for matching and use original background for reconstruction.
-        f = F.interpolate(f, scale_factor=1./self.rate, recompute_scale_factor=True, mode='nearest')
-        b = F.interpolate(b, scale_factor=1./self.rate, recompute_scale_factor=True, mode='nearest')
+        f = F.interpolate(f, scale_factor=1./self.rate, mode='nearest')
+        b = F.interpolate(b, scale_factor=1./self.rate, mode='nearest')
         int_fs = list(f.size())     # b*c*h*w
         int_bs = list(b.size())
         f_groups = torch.split(f, 1, dim=0)  # split tensors along the batch dimension
@@ -132,7 +132,7 @@ class ContextualAttention(nn.Module):
             if self.use_cuda:
                 mask = mask.cuda()
         else:
-            mask = F.interpolate(mask, scale_factor=1./(4*self.rate), recompute_scale_factor=True, mode='nearest')
+            mask = F.interpolate(mask, scale_factor=1./(4*self.rate),  mode='nearest')
         int_ms = list(mask.size())
         # m shape: [N, C*k*k, L]
         m = extract_image_patches(mask, ksizes=[self.ksize, self.ksize],
@@ -231,7 +231,7 @@ class ContextualAttention(nn.Module):
         # flow = torch.from_numpy(highlight_flow((offsets * mask.long()).cpu().data.numpy()))
 
         if self.rate != 1:
-            flow = F.interpolate(flow, scale_factor=self.rate*4, recompute_scale_factor=True, mode='nearest')
+            flow = F.interpolate(flow, scale_factor=self.rate*4,  mode='nearest')
 
         return y, flow
 
@@ -283,11 +283,11 @@ class CoarseGenerator(nn.Module):
         x = self.conv10_atrous(x)
         x = self.conv11(x)
         x = self.conv12(x)
-        x = F.interpolate(x, scale_factor=2, recompute_scale_factor=True, mode='nearest')
+        x = F.interpolate(x, scale_factor=2,  mode='nearest')
         # cfg.context_gen_feat_dim*2 x 128 x 128
         x = self.conv13(x)
         x = self.conv14(x)
-        x = F.interpolate(x, scale_factor=2, recompute_scale_factor=True, mode='nearest')
+        x = F.interpolate(x, scale_factor=2,  mode='nearest')
         # cfg.context_gen_feat_dim x 256 x 256
         x = self.conv15(x)
         x = self.conv16(x)
@@ -375,10 +375,10 @@ class FineGenerator(nn.Module):
         # merge two branches
         x = self.allconv11(x)
         x = self.allconv12(x)
-        x = F.interpolate(x, scale_factor=2, recompute_scale_factor=True, mode='nearest')
+        x = F.interpolate(x, scale_factor=2,  mode='nearest')
         x = self.allconv13(x)
         x = self.allconv14(x)
-        x = F.interpolate(x, scale_factor=2, recompute_scale_factor=True, mode='nearest')
+        x = F.interpolate(x, scale_factor=2,  mode='nearest')
         x = self.allconv15(x)
         x = self.allconv16(x)
         x = self.allconv17(x)
