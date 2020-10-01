@@ -108,7 +108,7 @@ class GenerativeContextual(nn.Module):
                 psnr = calculate_psnr(images.squeeze().cpu().detach().numpy(), inpainted_result.squeeze().cpu().detach().numpy())
                 psnr_values.append(psnr)
                 if i % 10000 == 0:
-                    print(f"{i}/{len(data.train_loader) / cfg.context_batch_size}")
+                    print(f"Epoch: {epoch}, Iteration: {i}/{len(data.train_loader)}")
 
             print(f"Epoch {self.iteration} is done!")
             print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")
