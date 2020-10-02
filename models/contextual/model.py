@@ -23,6 +23,33 @@ class GenerativeContextual(nn.Module):
 
         self.iteration = 0
 
+    def single_test(self, img, mask):
+        gen = torch.load(cfg.test_context_gen_path, map_location=lambda storage, loc: storage)
+        discs = torch.load(cfg.test_context_discs_path, map_location=lambda storage, loc: storage)
+
+        print(gen)
+        print('#############################')
+        self.Generator.load_state_dict(gen)
+        self.LocalDis.load_state_dict(discs['LocalD'])
+        self.GlobalDis.load_state_dict(discs['GlobalD'])
+
+        img = torch.FloatTensor(img) / 255
+        mask = torch.FloatTensor(mask) / 255
+        img = img.permute(2,0,1)
+        img = img.unsqueeze(0)
+        mask = mask.unsqueeze(0)
+        mask = mask.unsqueeze(0)
+
+        print(mask.shape)
+        print(test_image.shape)
+
+        x1, x2, offset_flow = self.Generator(img, mask)
+
+        x1_inpaint = x1 * masks + masked_images * (1. - mask)
+        x2_inpaint = x2 * masks + masked_images * (1. - mask)
+
+        return x2_inpaint
+
     def run(self, data):
         self.train()
         l1_loss = nn.L1Loss()
@@ -127,15 +154,12 @@ class GenerativeContextual(nn.Module):
         torch.save({
             'epoch': self.epoch,
             'generator': self.Generator.state_dict()
-        }, cfg.edge_gen_path)
+        }, cfg.context_generator_path)
 
         torch.save({
-            'discriminator': self.LocalDis.state_dict()
-        }, cfg.edge_disc_path)
-
-        torch.save({
-            'generator': self.GlobalDis.state_dict()
-        }, cfg.inpaint_gen_path)
+            'localDiscriminator': self.LocalDis.state_dict(),
+            'globalDiscriminator': self.GlobalDis.state_dict()
+        }, cfg.context_discs_path)
 
     def dis_forward(self, netD, ground_truth, x_inpaint):
         """

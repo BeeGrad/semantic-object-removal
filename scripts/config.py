@@ -12,7 +12,7 @@ class Config():
             process
         """
         # Train Parameters
-        self.DEVICE = torch.device("cuda")
+        self.DEVICE = torch.device("cpu")
         ''' Choose to train on cpu or cuda '''
         self.epoch_num = 100
         ''' Choose number of epochs '''
@@ -38,7 +38,7 @@ class Config():
         ''' Maximum value in an image, necessary to calculate PSNR '''
 
         # EdgeConnect Model Parameters
-        self.model = "Contextual"
+        self.model = "EdgeConnect"
         ''' Current Choices for Deep Learning Models:
                 -EdgeConnect
                 -Contextual
@@ -86,6 +86,7 @@ class Config():
         ''' Method to inpaint the test image
             - Mathematical
             - EdgeConnect
+            - Contextual
         '''
         self.test_edge_gen_path = f"../saves/{self.saveName}/pretrainedPaper/EdgeGenerator.pth"
         self.test_edge_disc_path = f"../saves/{self.saveName}/pretrainedPaper/EdgeDiscriminator.pth"
@@ -116,7 +117,7 @@ class Config():
         self.context_gen_feat_dim = 32
         self.context_dis_feat_dim = 32
         ''' Input and output sizes for gen and dis networks '''
-        self.use_cuda = True
+        self.use_cuda = False
         ''' Choose to use cuda '''
         self.context_LR = 0.0001
         self.context_BETA1 = 0.5
@@ -148,7 +149,9 @@ class Config():
         self.context_gan_loss_alpha =0.001
         self.context_wgan_gp_lambda = 10
         ''' Context train parameters '''
-        self.context_localdis_path = f"../saves/{self.saveName}/ourTrained/LocalDis.pth"
-        self.context_globaldis_path = f"../saves/{self.saveName}/ourTrained/GlobalDis.pth"
+        self.context_discs_path = f"../saves/{self.saveName}/ourTrained/Discriminators.pth"
         self.context_generator_path = f"../saves/{self.saveName}/ourTrained/Generator.pth"
-        ''' Model Save Paths '''
+        ''' Model Save and Load Paths '''
+        self.test_context_gen_path = f"../saves/{self.saveName}/pretrainedPaper/Generator.pt"
+        self.test_context_discs_path = f"../saves/{self.saveName}/pretrainedPaper/Discriminators.pt"
+        ''' Model Load Paths '''

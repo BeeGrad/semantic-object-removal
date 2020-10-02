@@ -5,6 +5,7 @@ from utils.testutils import freely_select_from_image, select_by_edge
 from scripts.config import Config
 from models.mathematicalmodels.model import InpaintMathematical
 from models.edgeconnect.model import EdgeConnect
+from models.contextual.model import GenerativeContextual
 from matplotlib import pyplot as plt
 
 cfg = Config()
@@ -29,11 +30,28 @@ if (cfg.test_inpaint_method == "EdgeConnect"):
     inpaint = EdgeConnect()
     output, edge_generated = inpaint.single_test(input_image, mask, img_gray, edge_org)
 
+if (cfg.test_inpaint_method == "Contextual"):
+    inpaint = GenerativeContextual()
+    output = inpaint.single_test(input_image, mask)
 
-# print(f"PSNR value of masked image: {calculate_psnr(input_image, original_image, mask)}")
 original_image = original_image/255
-print(f"PSNR value of inpainted image: {calculate_psnr(output, original_image, mask)}]")
+input_image = input_image/255
+# print(f"PSNR value of masked image: {calculate_psnr(input_image, original_image, mask)}")
+print(f"PSNR value of masked image: {calculate_psnr(input_image, original_image)}]")
+print(f"PSNR value of inpainted image: {calculate_psnr(output, original_image)}]")
 
+# Context Section
+# fig=plt.figure(figsize=(2, 2))
+# fig.add_subplot(2, 2, 1)
+# plt.imshow(original_image)
+# fig.add_subplot(2, 2, 2)
+# plt.imshow(input_image)
+# fig.add_subplot(2, 2, 3)
+# plt.imshow(output)
+# # fig.add_subplot(2, 2, 4)
+# # plt.imshow(edge_org)
+
+# EdgeConnect Section
 fig=plt.figure(figsize=(3, 2))
 fig.add_subplot(3, 2, 1)
 plt.imshow(original_image)

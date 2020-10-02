@@ -19,7 +19,7 @@ def freely_select_from_image(org_img):
             Freely remove any area from image.
         """
     img = org_img.copy()
-    mask = np.empty_like(img)
+    mask = np.empty_like(img[:,:,0])
     image_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     edge = cv2.Canny(image_gray, cfg.thresh1, cfg.thresh2)
 
@@ -33,6 +33,7 @@ def freely_select_from_image(org_img):
             if drawing == True:
                 cv2.line(img,(current_former_x,current_former_y),(former_x,former_y),(255,255,255), cfg.freely_select_mask_size)
                 cv2.line(edge,(current_former_x,current_former_y),(former_x,former_y),(0,0,0), cfg.freely_select_mask_size)
+                cv2.line(mask,(current_former_x,current_former_y),(former_x,former_y),(255,255,255), cfg.freely_select_mask_size)
                 current_former_x = former_x
                 current_former_y = former_y
 
@@ -56,8 +57,6 @@ def freely_select_from_image(org_img):
         if k == 27:
             break
 
-    mask = cv2.subtract(img[:,:,0], org_img[:,:,0])
-    ret,mask = cv2.threshold(mask,1,255,cv2.THRESH_BINARY)
     return img, mask, image_gray, edge
 
 def select_by_edge(org_img):
