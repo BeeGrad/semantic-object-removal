@@ -70,7 +70,7 @@ class Config():
         ''' Save locations for generator and discriminator for edge and inpaint models for train'''
 
         # Test parameters
-        self.test_im_path = '../foreground-substraction/test/test005.jpg'
+        self.test_im_path = '../tests/testImage.jpg'
         ''' Location of the image that is used to eval the program '''
         self.test_mask_method = 'freely_select_from_image'
         ''' Method to mask the test image
@@ -82,7 +82,7 @@ class Config():
         self.thresh1 = 200
         self.thresh2 = 250
         ''' Threshold values for canny edge detection '''
-        self.test_inpaint_method = 'EdgeConnect'
+        self.test_inpaint_method = 'Contextual'
         ''' Method to inpaint the test image
             - Mathematical
             - EdgeConnect
@@ -152,6 +152,6 @@ class Config():
         self.context_discs_path = f"../saves/{self.saveName}/pretrainedOur/Discriminators.pth"
         self.context_generator_path = f"../saves/{self.saveName}/pretrainedOur/Generator.pth"
         ''' Model Save and Load Paths '''
-        self.test_context_gen_path = f"../saves/{self.saveName}/pretrainedOur/Generator.pt"
-        self.test_context_discs_path = f"../saves/{self.saveName}/pretrainedOur/Discriminators.pt"
+        self.test_context_gen_path = f"../saves/{self.saveName}/pretrainedOur/Generator.pth"
+        self.test_context_discs_path = f"../saves/{self.saveName}/pretrainedOur/Discriminators.pth"
         ''' Model Load Paths '''

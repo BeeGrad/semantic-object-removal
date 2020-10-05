@@ -27,11 +27,10 @@ class GenerativeContextual(nn.Module):
         gen = torch.load(cfg.test_context_gen_path, map_location=lambda storage, loc: storage)
         discs = torch.load(cfg.test_context_discs_path, map_location=lambda storage, loc: storage)
 
-        print(gen)
         print('#############################')
-        self.Generator.load_state_dict(gen)
-        self.LocalDis.load_state_dict(discs['LocalD'])
-        self.GlobalDis.load_state_dict(discs['GlobalD'])
+        self.Generator.load_state_dict(gen['generator'])
+        self.LocalDis.load_state_dict(discs['localDiscriminator'])
+        self.GlobalDis.load_state_dict(discs['globalDiscriminator'])
 
         img = torch.FloatTensor(img) / 255
         mask = torch.FloatTensor(mask) / 255
@@ -41,14 +40,17 @@ class GenerativeContextual(nn.Module):
         mask = mask.unsqueeze(0)
 
         print(mask.shape)
-        print(test_image.shape)
+        print(img.shape)
+
+        img = img.to(cfg.DEVICE)
+        mask = mask.to(cfg.DEVICE)
 
         x1, x2, offset_flow = self.Generator(img, mask)
 
-        x1_inpaint = x1 * masks + masked_images * (1. - mask)
-        x2_inpaint = x2 * masks + masked_images * (1. - mask)
+        x1_inpaint = x1 * mask + img * (1. - mask)
+        x2_inpaint = x2 * mask + img * (1. - mask)
 
-        return x2_inpaint
+        return x2_inpaint.detach().cpu().permute(0,2,3,1).numpy().squeeze()
 
     def run(self, data):
         self.train()
