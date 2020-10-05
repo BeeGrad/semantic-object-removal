@@ -62,6 +62,8 @@ class GenerativeContextual(nn.Module):
 
         for epoch in range(self.epoch, cfg.epoch_num):
             for i, images in enumerate(data.train_loader):
+                if i>20000:
+                    break
                 images, masks, masked_images = data.return_inputs_contextual(images[0], bboxes)
 
                 if cfg.show_sample_data:
@@ -135,7 +137,7 @@ class GenerativeContextual(nn.Module):
                 psnr = calculate_psnr(images.squeeze().cpu().detach().numpy(), inpainted_result.squeeze().cpu().detach().numpy())
                 psnr_values.append(psnr)
                 if i % 10000 == 0:
-                    print(f"Epoch: {epoch}, Iteration: {i}/{len(data.train_loader)}")
+                    print(f"Epoch: {epoch}, Iteration: {i}/{20000}")
 
             print(f"Epoch {self.iteration} is done!")
             print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")

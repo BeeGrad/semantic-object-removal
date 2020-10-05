@@ -278,10 +278,10 @@ class DataRead():
             Creates necessary data loaders for pytorch with specified batch size.
         """
         # Train
-        dataset = torchvision.datasets.ImageFolder(root='../datasets/data_256', transform=torchvision.transforms.ToTensor())
+        dataset = torchvision.datasets.ImageFolder(root='../../datasets/data_256', transform=torchvision.transforms.ToTensor())
         self.train_loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.context_batch_size, shuffle=True, num_workers=0)
         # Test
-        dataset = torchvision.datasets.ImageFolder(root='../datasets/test_256', transform=torchvision.transforms.ToTensor())
+        dataset = torchvision.datasets.ImageFolder(root='../../datasets/test_256', transform=torchvision.transforms.ToTensor())
         self.test_loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.context_batch_size, shuffle=True, num_workers=0)
 
     def return_inputs_contextual(self, imgs, bboxes):

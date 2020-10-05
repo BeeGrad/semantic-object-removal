@@ -12,7 +12,7 @@ class Config():
             process
         """
         # Train Parameters
-        self.DEVICE = torch.device("cpu")
+        self.DEVICE = torch.device("cuda")
         ''' Choose to train on cpu or cuda '''
         self.epoch_num = 100
         ''' Choose number of epochs '''
@@ -38,7 +38,7 @@ class Config():
         ''' Maximum value in an image, necessary to calculate PSNR '''
 
         # EdgeConnect Model Parameters
-        self.model = "EdgeConnect"
+        self.model = "Contextual"
         ''' Current Choices for Deep Learning Models:
                 -EdgeConnect
                 -Contextual
@@ -117,7 +117,7 @@ class Config():
         self.context_gen_feat_dim = 32
         self.context_dis_feat_dim = 32
         ''' Input and output sizes for gen and dis networks '''
-        self.use_cuda = False
+        self.use_cuda = True
         ''' Choose to use cuda '''
         self.context_LR = 0.0001
         self.context_BETA1 = 0.5
@@ -149,9 +149,9 @@ class Config():
         self.context_gan_loss_alpha =0.001
         self.context_wgan_gp_lambda = 10
         ''' Context train parameters '''
-        self.context_discs_path = f"../saves/{self.saveName}/ourTrained/Discriminators.pth"
-        self.context_generator_path = f"../saves/{self.saveName}/ourTrained/Generator.pth"
+        self.context_discs_path = f"../saves/{self.saveName}/pretrainedOur/Discriminators.pth"
+        self.context_generator_path = f"../saves/{self.saveName}/pretrainedOur/Generator.pth"
         ''' Model Save and Load Paths '''
-        self.test_context_gen_path = f"../saves/{self.saveName}/pretrainedPaper/Generator.pt"
-        self.test_context_discs_path = f"../saves/{self.saveName}/pretrainedPaper/Discriminators.pt"
+        self.test_context_gen_path = f"../saves/{self.saveName}/pretrainedOur/Generator.pt"
+        self.test_context_discs_path = f"../saves/{self.saveName}/pretrainedOur/Discriminators.pt"
         ''' Model Load Paths '''
