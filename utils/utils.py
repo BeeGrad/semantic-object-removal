@@ -123,11 +123,16 @@ def compute_color(u, v):
 def same_padding(images, ksizes, strides, rates):
     """
     Input:
-
+        images: [batch, channels, in_rows, in_cols]. A 4-D Tensor with shape
+        ksizes: [ksize_rows, ksize_cols]. The size of the sliding window for
+            each dimension of images
+        strides: [stride_rows, stride_cols]
+        rates: [dilation_rows, dilation_cols]
     Output:
-
+        images: return padded images
     Description:
-
+        (Not sure but probably) returns images that is padded to have same size
+        with given kernel sizes
     """
     assert len(images.size()) == 4
     batch_size, channel, rows, cols = images.size()
@@ -183,11 +188,11 @@ def flow_to_image(flow):
 def reduce_mean(x, axis=None, keepdim=False):
     """
     Input:
-
+        x: matrix
     Output:
-
+        x: matrix
     Description:
-
+        find the mean of all dimensions
     """
     if not axis:
         axis = range(len(x.shape))
@@ -217,7 +222,7 @@ def random_bbox():
     Output:
         tuple: (top, left, height, width)
     Description:
-        Generate a random tlhw with configuration.
+        Generate a random tlhw with configuration to create a box on image.
     """
     img_height, img_width, _ = cfg.context_image_shape
     h, w = cfg.context_mask_shape

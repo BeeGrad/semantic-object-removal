@@ -38,7 +38,7 @@ class Config():
         ''' Maximum value in an image, necessary to calculate PSNR '''
 
         # EdgeConnect Model Parameters
-        self.model = "EdgeConnect"
+        self.model = "Contextual"
         ''' Current Choices for Deep Learning Models:
                 -EdgeConnect
                 -Contextual
@@ -82,7 +82,7 @@ class Config():
         self.thresh1 = 200
         self.thresh2 = 250
         ''' Threshold values for canny edge detection '''
-        self.test_inpaint_method = 'EdgeConnect'
+        self.test_inpaint_method = 'Contextual'
         ''' Method to inpaint the test image
             - Mathematical
             - EdgeConnect
@@ -149,8 +149,8 @@ class Config():
         self.context_gan_loss_alpha =0.001
         self.context_wgan_gp_lambda = 10
         ''' Context train parameters '''
-        self.context_discs_path = f"../saves/{self.saveName}/ourTrained/Discriminators.pth"
-        self.context_generator_path = f"../saves/{self.saveName}/ourTrained/Generator.pth"
+        self.context_discs_path = f"../saves/{self.saveName}/pretrainedOur/Discriminators.pth"
+        self.context_generator_path = f"../saves/{self.saveName}/pretrainedOur/Generator.pth"
         ''' Model Save and Load Paths '''
         self.test_context_gen_path = f"../saves/{self.saveName}/pretrainedPaper/Generator.pt"
         self.test_context_discs_path = f"../saves/{self.saveName}/pretrainedPaper/Discriminators.pt"

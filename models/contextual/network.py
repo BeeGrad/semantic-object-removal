@@ -53,14 +53,22 @@ class Conv2dBlock(nn.Module):
 
 def gen_conv(input_dim = cfg.context_input_dim, output_dim = cfg.context_gen_feat_dim,
             kernel_size=3, stride=1, padding=0, rate=1, activation='elu'):
-    return Conv2dBlock(input_dim, output_dim, kernel_size, stride,
-                       conv_padding=padding, dilation=rate,
-                       activation=activation)
+            """
+            Input:
+                none
+            Output:
+                none
+            Description:
+                Creates a conv layer with desired input and output sizes with other features.
+            """
+            return Conv2dBlock(input_dim, output_dim, kernel_size, stride,
+                        conv_padding=padding, dilation=rate,
+                        activation=activation)
 
 
 def dis_conv(input_dim = cfg.context_input_dim, output_dim = cfg.context_gen_feat_dim,
             kernel_size=5, stride=2, padding=0, rate=1, activation='lrelu'):
-    return Conv2dBlock(input_dim, output_dim, kernel_size, stride,
+            return Conv2dBlock(input_dim, output_dim, kernel_size, stride,
                        conv_padding=padding, dilation=rate,
                        activation=activation)
 

@@ -27,8 +27,8 @@ class GenerativeContextual(nn.Module):
         gen = torch.load(cfg.test_context_gen_path, map_location=lambda storage, loc: storage)
         discs = torch.load(cfg.test_context_discs_path, map_location=lambda storage, loc: storage)
 
-        print(gen)
-        print('#############################')
+        print(gen.keys())
+
         self.Generator.load_state_dict(gen)
         self.LocalDis.load_state_dict(discs['LocalD'])
         self.GlobalDis.load_state_dict(discs['GlobalD'])
@@ -41,16 +41,24 @@ class GenerativeContextual(nn.Module):
         mask = mask.unsqueeze(0)
 
         print(mask.shape)
-        print(test_image.shape)
+        print(img.shape)
 
         x1, x2, offset_flow = self.Generator(img, mask)
 
-        x1_inpaint = x1 * masks + masked_images * (1. - mask)
-        x2_inpaint = x2 * masks + masked_images * (1. - mask)
+        x1_inpaint = x1 * mask + img * (1. - mask)
+        x2_inpaint = x2 * mask + img * (1. - mask)
 
-        return x2_inpaint
+        return x2_inpaint.detach().permute(0,2,3,1).cpu().numpy().squeeze()
 
     def run(self, data):
+        """
+        Input:
+            data
+        Output:
+            none
+        Description:
+            Trains network
+        """
         self.train()
         l1_loss = nn.L1Loss()
         losses = {}
