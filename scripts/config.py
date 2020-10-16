@@ -12,7 +12,7 @@ class Config():
             process
         """
         # Train Parameters
-        self.DEVICE = torch.device("cpu")
+        self.DEVICE = torch.device("cuda")
         ''' Choose to train on cpu or cuda '''
         self.epoch_num = 100
         ''' Choose number of epochs '''
@@ -70,7 +70,7 @@ class Config():
         ''' Save locations for generator and discriminator for edge and inpaint models for train'''
 
         # Test parameters
-        self.test_im_path = '../foreground-substraction/test/test005.jpg'
+        self.test_im_path = '../tests/testImage.jpg'
         ''' Location of the image that is used to eval the program '''
         self.test_mask_method = 'freely_select_from_image'
         ''' Method to mask the test image
@@ -117,7 +117,7 @@ class Config():
         self.context_gen_feat_dim = 32
         self.context_dis_feat_dim = 32
         ''' Input and output sizes for gen and dis networks '''
-        self.use_cuda = False
+        self.use_cuda = True
         ''' Choose to use cuda '''
         self.context_LR = 0.0001
         self.context_BETA1 = 0.5
@@ -152,6 +152,6 @@ class Config():
         self.context_discs_path = f"../saves/{self.saveName}/pretrainedOur/Discriminators.pth"
         self.context_generator_path = f"../saves/{self.saveName}/pretrainedOur/Generator.pth"
         ''' Model Save and Load Paths '''
-        self.test_context_gen_path = f"../saves/{self.saveName}/pretrainedPaper/Generator.pt"
-        self.test_context_discs_path = f"../saves/{self.saveName}/pretrainedPaper/Discriminators.pt"
+        self.test_context_gen_path = f"../saves/{self.saveName}/pretrainedOur/Generator.pth"
+        self.test_context_discs_path = f"../saves/{self.saveName}/pretrainedOur/Discriminators.pth"
         ''' Model Load Paths '''

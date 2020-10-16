@@ -27,11 +27,18 @@ class GenerativeContextual(nn.Module):
         gen = torch.load(cfg.test_context_gen_path, map_location=lambda storage, loc: storage)
         discs = torch.load(cfg.test_context_discs_path, map_location=lambda storage, loc: storage)
 
+<<<<<<< HEAD
         print(gen.keys())
 
         self.Generator.load_state_dict(gen)
         self.LocalDis.load_state_dict(discs['LocalD'])
         self.GlobalDis.load_state_dict(discs['GlobalD'])
+=======
+        print('#############################')
+        self.Generator.load_state_dict(gen['generator'])
+        self.LocalDis.load_state_dict(discs['localDiscriminator'])
+        self.GlobalDis.load_state_dict(discs['globalDiscriminator'])
+>>>>>>> 7c1ccf1bc64a1a1db2124a745ef3ac25d7ea95cd
 
         img = torch.FloatTensor(img) / 255
         mask = torch.FloatTensor(mask) / 255
@@ -42,13 +49,23 @@ class GenerativeContextual(nn.Module):
 
         print(mask.shape)
         print(img.shape)
+<<<<<<< HEAD
+=======
+
+        img = img.to(cfg.DEVICE)
+        mask = mask.to(cfg.DEVICE)
+>>>>>>> 7c1ccf1bc64a1a1db2124a745ef3ac25d7ea95cd
 
         x1, x2, offset_flow = self.Generator(img, mask)
 
         x1_inpaint = x1 * mask + img * (1. - mask)
         x2_inpaint = x2 * mask + img * (1. - mask)
 
+<<<<<<< HEAD
         return x2_inpaint.detach().permute(0,2,3,1).cpu().numpy().squeeze()
+=======
+        return x2_inpaint.detach().cpu().permute(0,2,3,1).numpy().squeeze()
+>>>>>>> 7c1ccf1bc64a1a1db2124a745ef3ac25d7ea95cd
 
     def run(self, data):
         """
@@ -70,6 +87,8 @@ class GenerativeContextual(nn.Module):
 
         for epoch in range(self.epoch, cfg.epoch_num):
             for i, images in enumerate(data.train_loader):
+                if i>20000:
+                    break
                 images, masks, masked_images = data.return_inputs_contextual(images[0], bboxes)
 
                 if cfg.show_sample_data:
@@ -143,7 +162,7 @@ class GenerativeContextual(nn.Module):
                 psnr = calculate_psnr(images.squeeze().cpu().detach().numpy(), inpainted_result.squeeze().cpu().detach().numpy())
                 psnr_values.append(psnr)
                 if i % 10000 == 0:
-                    print(f"Epoch: {epoch}, Iteration: {i}/{len(data.train_loader)}")
+                    print(f"Epoch: {epoch}, Iteration: {i}/{20000}")
 
             print(f"Epoch {self.iteration} is done!")
             print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")
