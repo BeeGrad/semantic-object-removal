@@ -42,7 +42,6 @@ print(f"PSNR value of masked image: {calculate_psnr(input_image, original_image)
 print(f"PSNR value of inpainted image: {calculate_psnr(output, original_image)}]")
 print(original_image)
 # Context Section
-<<<<<<< HEAD
 if (cfg.test_inpaint_method == "Contextual"):
     fig=plt.figure(figsize=(2, 2))
     fig.add_subplot(2, 2, 1)
@@ -71,32 +70,3 @@ if (cfg.test_inpaint_method == "EdgeConnect"):
     fig.add_subplot(3, 2, 6)
     plt.imshow(output)
     plt.show()
-=======
-fig=plt.figure(figsize=(2, 2))
-fig.add_subplot(2, 2, 1)
-plt.imshow(original_image)
-fig.add_subplot(2, 2, 2)
-plt.imshow(input_image)
-fig.add_subplot(2, 2, 3)
-plt.imshow(output)
-plt.show()
-# fig.add_subplot(2, 2, 4)
-# plt.imshow(edge_org)
-
-# EdgeConnect Section
-# fig=plt.figure(figsize=(3, 2))
-# fig.add_subplot(3, 2, 1)
-# plt.imshow(original_image)
-# fig.add_subplot(3, 2, 2)
-# plt.imshow(input_image)
-# fig.add_subplot(3, 2, 3)
-# plt.imshow(img_gray)
-# fig.add_subplot(3, 2, 4)
-# plt.imshow(edge_org)
-# fig.add_subplot(3, 2, 5)
-# plt.imshow(edge_generated)
-# fig.add_subplot(3, 2, 6)
-# plt.imshow(output)
-# plt.show()
->>>>>>> 7c1ccf1bc64a1a1db2124a745ef3ac25d7ea95cd
-# Take output with pre-trained network
