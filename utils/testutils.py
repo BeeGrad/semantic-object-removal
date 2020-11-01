@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 from scripts.config import Config
 from matplotlib import pyplot as plt
+from skimage.feature import canny
+from skimage.color import rgb2gray
 
 cfg = Config()
 drawing = False
@@ -20,8 +22,13 @@ def freely_select_from_image(org_img):
         """
     img = org_img.copy()
     mask = np.empty_like(img[:,:,0])
+    edge = np.empty_like(img[:,:,0])
+    image_gray = np.empty_like(img[:,:,0])
     image_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     edge = cv2.Canny(image_gray, cfg.thresh1, cfg.thresh2)
+    # image_gray = rgb2gray(img) # Nedenini bilmiyorum ama ust 2 satir yerine bu 2 satiri kullaninca
+    # edge = canny(image_gray, sigma=cfg.SIGMA) # Hata veriyor, edge uzerine line cizerken
+    print(type(edge))
 
     def mouse_action(event, former_x, former_y, flags, param):
         global current_former_x, current_former_y, count, drawing

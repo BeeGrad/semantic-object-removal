@@ -12,7 +12,7 @@ class Config():
             process
         """
         # Train Parameters
-        self.DEVICE = torch.device("cuda")
+        self.DEVICE = torch.device("cpu")
         ''' Choose to train on cpu or cuda '''
         self.epoch_num = 100
         ''' Choose number of epochs '''
@@ -88,10 +88,10 @@ class Config():
             - EdgeConnect
             - Contextual
         '''
-        self.test_edge_gen_path = f"../saves/{self.saveName}/pretrainedPaper/EdgeGenerator.pth"
-        self.test_edge_disc_path = f"../saves/{self.saveName}/pretrainedPaper/EdgeDiscriminator.pth"
-        self.test_inpaint_gen_path = f"../saves/{self.saveName}/pretrainedPaper/InpaintGenerator.pth"
-        self.test_inpaint_disc_path = f"../saves/{self.saveName}/pretrainedPaper/InpaintDiscriminator.pth"
+        self.test_edge_gen_path = f"../saves/EdgeConnectModel/pretrainedPaper/EdgeGenerator.pth"
+        self.test_edge_disc_path = f"../saves/EdgeConnectModel/pretrainedPaper/EdgeDiscriminator.pth"
+        self.test_inpaint_gen_path = f"../saves/EdgeConnectModel/pretrainedPaper/InpaintGenerator.pth"
+        self.test_inpaint_disc_path = f"../saves/EdgeConnectModel/pretrainedPaper/InpaintDiscriminator.pth"
         ''' Save locations for generator and discriminator for edge and inpaint models for test'''
 
         # Traditional Models parameters
@@ -117,7 +117,7 @@ class Config():
         self.context_gen_feat_dim = 32
         self.context_dis_feat_dim = 32
         ''' Input and output sizes for gen and dis networks '''
-        self.use_cuda = True
+        self.use_cuda = False
         ''' Choose to use cuda '''
         self.context_LR = 0.0001
         self.context_BETA1 = 0.5
@@ -149,9 +149,9 @@ class Config():
         self.context_gan_loss_alpha =0.001
         self.context_wgan_gp_lambda = 10
         ''' Context train parameters '''
-        self.context_discs_path = f"../saves/{self.saveName}/pretrainedOur/Discriminators.pth"
-        self.context_generator_path = f"../saves/{self.saveName}/pretrainedOur/Generator.pth"
+        self.context_discs_path = f"../saves/ContextualModel/pretrainedOur/Discriminators.pth"
+        self.context_generator_path = f"../saves/ContextualModel/pretrainedOur/Generator.pth"
         ''' Model Save and Load Paths '''
-        self.test_context_gen_path = f"../saves/{self.saveName}/pretrainedOur/Generator.pth"
-        self.test_context_discs_path = f"../saves/{self.saveName}/pretrainedOur/Discriminators.pth"
+        self.test_context_gen_path = f"../saves/ContextualModel/pretrainedOur/Generator.pth"
+        self.test_context_discs_path = f"../saves/ContextualModel/pretrainedOur/Discriminators.pth"
         ''' Model Load Paths '''

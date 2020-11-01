@@ -293,6 +293,8 @@ class InpaintingModel(BaseModel):
 
 class EdgeConnect():
     def __init__(self):
+        super(EdgeConnect, self).__init__()
+
         self.edge_model = EdgeModel().to(cfg.DEVICE)
         self.inpaint_model = InpaintingModel().to(cfg.DEVICE)
 
