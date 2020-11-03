@@ -72,7 +72,7 @@ class DataRead():
 
             print(f"Data Array has been created from cifar10 dataset with shape: {data.shape}")
             self.data = data
-            
+
     def create_masked_data(self, imgs):
         """
         Input:
@@ -160,10 +160,10 @@ class DataRead():
             Creates necessary data loaders for pytorch with specified batch size.
         """
         # Train
-        dataset = torchvision.datasets.ImageFolder(root='../../datasets/data_256', transform=torchvision.transforms.ToTensor())
+        dataset = torchvision.datasets.ImageFolder(root='../datasets/data_256', transform=torchvision.transforms.ToTensor())
         self.train_loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True, num_workers=0)
         # Test
-        dataset = torchvision.datasets.ImageFolder(root='../../datasets/test_256', transform=torchvision.transforms.ToTensor())
+        dataset = torchvision.datasets.ImageFolder(root='../datasets/test_256', transform=torchvision.transforms.ToTensor())
         self.test_loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True, num_workers=0)
 
     def return_inputs(self, imgs):
@@ -189,6 +189,30 @@ class DataRead():
             cfg.show_sample_data = False
 
         return imgs, gray_images, edges, masks
+
+    def return_inputs_fpn(self, imgs):
+        masks, gray_images, edges, masked_images = self.create_masked_data(imgs.permute(0,2,3,1).numpy())
+
+        imgs = torch.FloatTensor(imgs)
+        masks = torch.FloatTensor(masks)
+        gray_images = torch.FloatTensor(gray_images)
+        edges = torch.FloatTensor(edges)
+        masked_images = torch.FloatTensor(masked_images)
+
+        gray_images = gray_images.unsqueeze(1)
+        edges = edges.unsqueeze(1)
+        masks = masks.unsqueeze(1)
+        masked_images = masked_images.permute(0, 3, 1, 2)
+
+        if cfg.show_sample_data:
+            print(f"Masks shape: {masks.shape}")
+            print(f"Edges shape: {edges.shape}")
+            print(f"Gray_data shape: {gray_images.shape}")
+            print(f"masked_data shape: {masked_images.shape}")
+            print(f"data shape: {imgs.shape}")
+            cfg.show_sample_data = False
+
+        return imgs, masked_images, masks
 
     def context_create_data_loaders(self):
         """

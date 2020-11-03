@@ -220,13 +220,6 @@ class InpaintingModel(BaseModel):
 
         # generator adversarial loss
         gen_input_fake = outputs
-        gen_fake, _ = self.discriminator(gen_input_fake)        # in: (grayscale(1) + edge(1))
-        gen_gan_loss = self.adversarial_loss(gen_fake, True, False)
-        gen_loss += gen_gan_loss
-
-
-        # generator adversarial loss
-        gen_input_fake = outputs
         gen_fake, _ = self.discriminator(gen_input_fake)                    # in: [rgb(3)]
         gen_gan_loss = self.adversarial_loss(gen_fake, True, False) * cfg.INPAINT_ADV_LOSS_WEIGHT
         gen_loss += gen_gan_loss

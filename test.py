@@ -6,7 +6,7 @@ from scripts.config import Config
 from models.mathematicalmodels.model import InpaintMathematical
 from models.edgeconnect.model import EdgeConnect
 from models.contextual.model import GenerativeContextual
-from models.beemodels.model import EdgeContextUnifiedModel
+from models.beemodels.unifiedModel import EdgeContextUnifiedModel
 from matplotlib import pyplot as plt
 
 cfg = Config()
