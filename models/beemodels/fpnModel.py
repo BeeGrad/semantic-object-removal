@@ -44,12 +44,12 @@ class fpnGan():
                 print(f"Shape of Features (Input of Inpaint GAN):{o1.shape}")
                 print(f"Shape of Inpainted Image (Output of Inpaint GAN):{out.shape}")
 
-                gen_loss.backward(retain_graph=True)
+                gen_loss.backward()
                 self.gen_optimizer.step()
                 self.fpn_optimizer.step()
 
-                dis_loss.backward(retain_graph=True)
+                dis_loss.backward()
                 self.dis_optimizer.step()
 
-                break
-            break
+                if(i%1000==0):
+                    print(f"{i}/{len(data.train_loader)}")
