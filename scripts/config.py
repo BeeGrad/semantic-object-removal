@@ -38,7 +38,7 @@ class Config():
         ''' Maximum value in an image, necessary to calculate PSNR '''
 
         # EdgeConnect Model Parameters
-        self.model = "VanillaGAN"
+        self.model = "FPNGan"
         ''' Current Choices for Deep Learning Models:
                 -EdgeConnect
                 -Contextual
@@ -47,7 +47,7 @@ class Config():
                 '''
         self.saveName = f"{self.model}Model"
         ''' Save name that is going to be used while training '''
-        self.loadModel = False
+        self.loadModel = True
         ''' Choose to load model '''
         self.loadName = f"{self.model}Model"
         ''' Load name to load the pre-trained model '''
@@ -157,3 +157,11 @@ class Config():
         self.test_context_gen_path = f"../saves/ContextualModel/pretrainedOur/Generator.pth"
         self.test_context_discs_path = f"../saves/ContextualModel/pretrainedOur/Discriminators.pth"
         ''' Model Load Paths '''
+        # FPN Model Parameters
+        self.fpn_inpaint_gen_path = f"../saves/{self.saveName}/InpaintGenerator.pt"
+        self.fpn_inpaint_disc_path = f"../saves/{self.saveName}/InpaintDiscriminator.pt"
+        self.fpn_fpnNetwork_path = f"../saves/{self.saveName}/FPN.pt"
+
+        # Vanilla Model Parameters
+        self.vanilla_inpaint_gen_path = f"../saves/{self.saveName}/InpaintGenerator.pt"
+        self.vanilla_inpaint_disc_path = f"../saves/{self.saveName}/InpaintDiscriminator.pt"

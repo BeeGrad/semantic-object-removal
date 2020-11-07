@@ -296,7 +296,7 @@ def show_sample_input_data_context(img1, img2, img3):
     fig.add_subplot(2, 2, 1)
     plt.imshow(img1[0].permute(1,2,0).numpy())
     fig.add_subplot(2, 2, 2)
-    plt.imshow(img2[0].permute(1,2,0).numpy())
+    plt.imshow(img2[0].permute(1,2,0).detach().numpy())
     fig.add_subplot(2, 2, 3)
     plt.imshow(img3.squeeze()[0].numpy(), cmap='gray')
     plt.show()

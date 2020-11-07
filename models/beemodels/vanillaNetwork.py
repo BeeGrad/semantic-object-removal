@@ -99,8 +99,8 @@ class InpaintGenerator(nn.Module):
 class InpaintingModel(nn.Module):
     def __init__(self):
         super(InpaintingModel, self).__init__()
-        self.generator = InpaintGenerator()
-        self.discriminator = Discriminator(in_channels=3)
+        self.generator = InpaintGenerator().to(cfg.DEVICE)
+        self.discriminator = Discriminator(in_channels=3).to(cfg.DEVICE)
 
         self.l1_loss = nn.L1Loss()
         self.perceptual_loss = PerceptualLoss()
