@@ -46,8 +46,9 @@ class VanillaGAN():
 
                 out, gen_loss, dis_loss, logs = self.inpaint_model.step(images, masks)
                 out = (out * masks) + (images * (1 - masks))
-                print(f"Shape of Inpainted Image (Output of Inpaint GAN):{out.shape}")
-                show_sample_input_data_context(masked_images, out, masks)
+
+                # print(f"Shape of Inpainted Image (Output of Inpaint GAN):{out.shape}")
+                # show_sample_input_data_context(masked_images, out, masks)
 
                 gen_loss.backward()
                 self.gen_optimizer.step()
@@ -56,12 +57,10 @@ class VanillaGAN():
                 self.dis_optimizer.step()
 
                 psnr = calculate_psnr(images.squeeze().cpu().detach().numpy(), out.squeeze().cpu().detach().numpy())
-                print(psnr)
                 psnr_values.append(psnr)
 
                 if(i%1000==0):
                     print(f"{i}/{len(data.train_loader)}")
-                break
 
             print(f"Epoch {self.iteration} is done!")
             print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")

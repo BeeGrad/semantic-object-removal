@@ -54,11 +54,11 @@ class fpnGan():
                 out, gen_loss, dis_loss, logs = self.inpaint_model.step(o1, masks, images)
                 out = (out * masks) + (images * (1 - masks))
 
-                show_sample_input_data_context(masked_images, out, masks)
+                # show_sample_input_data_context(masked_images, out, masks)
 
-                print(f"Shape of Masked Images (Input of FPN):{masked_images.shape}")
-                print(f"Shape of Features (Input of Inpaint GAN):{o1.shape}")
-                print(f"Shape of Inpainted Image (Output of Inpaint GAN):{out.shape}")
+                # print(f"Shape of Masked Images (Input of FPN):{masked_images.shape}")
+                # print(f"Shape of Features (Input of Inpaint GAN):{o1.shape}")
+                # print(f"Shape of Inpainted Image (Output of Inpaint GAN):{out.shape}")
 
                 gen_loss.backward()
                 self.gen_optimizer.step()
@@ -68,12 +68,10 @@ class fpnGan():
                 self.dis_optimizer.step()
 
                 psnr = calculate_psnr(images.squeeze().cpu().detach().numpy(), out.squeeze().cpu().detach().numpy())
-                print(psnr)
                 psnr_values.append(psnr)
 
                 if(i%1000==0):
                     print(f"{i}/{len(data.train_loader)}")
-                break
 
             print(f"Epoch {self.iteration} is done!")
             print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")
