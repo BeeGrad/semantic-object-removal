@@ -38,11 +38,12 @@ class Config():
         ''' Maximum value in an image, necessary to calculate PSNR '''
 
         # EdgeConnect Model Parameters
-        self.model = "FPNGan"
+        self.model = "VanillaGAN"
         ''' Current Choices for Deep Learning Models:
                 -EdgeConnect
                 -Contextual
                 -FPNGan
+                -VanillaGAN
                 '''
         self.saveName = f"{self.model}Model"
         ''' Save name that is going to be used while training '''
