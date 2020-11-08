@@ -8,6 +8,7 @@ from models.edgeconnect.model import EdgeConnect
 from models.contextual.model import GenerativeContextual
 from models.beemodels.unifiedModel import EdgeContextUnifiedModel
 from matplotlib import pyplot as plt
+from skimage.measure import compare_ssim
 
 cfg = Config()
 original_image = cv2.imread(cfg.test_im_path)
@@ -70,6 +71,12 @@ print(f"PSNR value of Math inpainted image: {calculate_psnr(outputMath/255, orig
 print(f"PSNR value of Contextual inpainted image: {calculate_psnr(outputContextual, original_image)}]")
 print(f"PSNR value of Edge inpainted image: {calculate_psnr(outputEdge, original_image)}]")
 print(f"PSNR value of Unified inpainted image: {calculate_psnr(outputUnified, original_image)}]")
+
+print(f"SSIM value of masked image: {compare_ssim(original_image, input_image, data_range=1, win_size=11, multichannel=True)}]")
+print(f"SSIM value of Math inpainted image: {compare_ssim(original_image, outputMath/255, data_range=1, win_size=11, multichannel=True)}]")
+print(f"SSIM value of Contextual inpainted image: {compare_ssim(original_image, outputContextual, data_range=1, win_size=11, multichannel=True)}]")
+print(f"SSIM value of Edge inpainted image: {compare_ssim(original_image, outputEdge, data_range=1, win_size=11, multichannel=True)}]")
+print(f"SSIM value of Unified inpainted image: {compare_ssim(original_image, outputUnified, data_range=1, win_size=11, multichannel=True)}]")
 
 # Math Section
 fig=plt.figure(figsize=(2, 2))
