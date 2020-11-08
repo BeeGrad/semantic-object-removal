@@ -56,14 +56,14 @@ class VanillaGAN():
                 dis_loss.backward()
                 self.dis_optimizer.step()
 
-                psnr = calculate_psnr(images.squeeze().cpu().detach().numpy(), out.squeeze().cpu().detach().numpy())
-                psnr_values.append(psnr)
-
+                # psnr = calculate_psnr(images.squeeze().cpu().detach().numpy(), out.squeeze().cpu().detach().numpy())
+                # psnr_values.append(psnr)
+                print(i)
                 if(i%1000==0):
                     print(f"{i}/{len(data.train_loader)}")
 
             print(f"Epoch {self.iteration} is done!")
-            print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")
+            # print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")
             self.save()
 
     def save(self):

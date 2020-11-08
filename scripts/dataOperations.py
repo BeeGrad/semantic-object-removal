@@ -167,6 +167,7 @@ class DataRead():
         self.test_loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True, num_workers=0)
 
     def return_inputs(self, imgs):
+        print(imgs.shape)
         masks, gray_images, edges, masked_images = self.create_masked_data(imgs.permute(0,2,3,1).numpy())
 
         imgs = torch.FloatTensor(imgs)

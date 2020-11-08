@@ -4,6 +4,8 @@ from scripts.config import Config
 from matplotlib import pyplot as plt
 from skimage.feature import canny
 from skimage.color import rgb2gray
+from scripts.dataOperations import DataRead
+import torch
 
 cfg = Config()
 drawing = False
@@ -121,3 +123,14 @@ def select_by_edge(org_img):
             print(f"thresh1: {cfg.thresh1}, thresh2: {cfg.thresh2}")
 
     return org_img
+
+def select_by_train_mask(org_img):
+    print(org_img.shape)
+    data = DataRead(cfg.dataset, cfg.masking_type, cfg.batch_size)
+    imgs, gray_images, edges, masks = data.return_inputs(torch.FloatTensor(org_img).unsqueeze(0).permute(0,3,1,2))
+    edges = (1 - edges)
+    imgs = np.uint8(imgs.squeeze(0).permute(1,2,0).numpy() * 255)
+    gray_images = np.uint8(gray_images.squeeze(0).squeeze(0).numpy() * 255)
+    edges = np.uint8(edges.squeeze(0).squeeze(0).numpy() * 255)
+    masks = np.uint8(masks.squeeze(0).squeeze(0).numpy() * 255)
+    return imgs, gray_images, edges, masks

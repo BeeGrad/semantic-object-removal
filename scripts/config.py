@@ -38,7 +38,7 @@ class Config():
         ''' Maximum value in an image, necessary to calculate PSNR '''
 
         # EdgeConnect Model Parameters
-        self.model = "FPNGan"
+        self.model = "EdgeConnect"
         ''' Current Choices for Deep Learning Models:
                 -EdgeConnect
                 -Contextual
@@ -74,17 +74,18 @@ class Config():
         # Test parameters
         self.test_im_path = '../tests/testImage.jpg'
         ''' Location of the image that is used to eval the program '''
-        self.test_mask_method = 'freely_select_from_image'
+        self.test_mask_method = 'select_by_train_mask'
         ''' Method to mask the test image
             - freely_select_from_image
             - select_by_edge
+            - select_by_train_mask
          '''
         self.freely_select_mask_size = 15
         ''' Size of the brush for freely select method '''
         self.thresh1 = 200
         self.thresh2 = 250
         ''' Threshold values for canny edge detection '''
-        self.test_inpaint_method = 'Contextual'
+        self.test_inpaint_method = 'EdgeConnect'
         ''' Method to inpaint the test image
             - Mathematical
             - EdgeConnect

@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from utils.utils import calculate_psnr
-from utils.testutils import freely_select_from_image, select_by_edge
+from utils.testutils import freely_select_from_image, select_by_edge, select_by_train_mask
 from scripts.config import Config
 from models.mathematicalmodels.model import InpaintMathematical
 from models.edgeconnect.model import EdgeConnect
@@ -12,6 +12,7 @@ from matplotlib import pyplot as plt
 cfg = Config()
 original_image = cv2.imread(cfg.test_im_path)
 print("Original Image is loaded")
+print(original_image)
 
 if (cfg.test_mask_method == "freely_select_from_image"):
     input_image, mask, img_gray, edge_org = freely_select_from_image(original_image)
@@ -19,10 +20,24 @@ if (cfg.test_mask_method == "freely_select_from_image"):
 if (cfg.test_mask_method == "select_by_edge"):
     input_image = select_by_edge(original_image)
 
+if (cfg.test_mask_method == "select_by_train_mask"):
+    input_image, img_gray, edge_org, mask = select_by_train_mask(original_image/255.0)
+
 # Opencv saves image channels as BGR, from now on to show those images correctly
 # We convert images BGR2RGB
 original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
 input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
+
+fig=plt.figure(figsize=(2, 2))
+fig.add_subplot(2, 2, 1)
+plt.imshow(input_image)
+fig.add_subplot(2, 2, 2)
+plt.imshow(img_gray)
+fig.add_subplot(2, 2, 3)
+plt.imshow(edge_org)
+fig.add_subplot(2, 2, 4)
+plt.imshow(mask)
+plt.show()
 
 # Inpaint Models
 print("Mathematical Model Section Started! ...")
@@ -56,7 +71,7 @@ print(f"PSNR value of Contextual inpainted image: {calculate_psnr(outputContextu
 print(f"PSNR value of Edge inpainted image: {calculate_psnr(outputEdge, original_image)}]")
 print(f"PSNR value of Unified inpainted image: {calculate_psnr(outputUnified, original_image)}]")
 
-# Context Section
+# Math Section
 fig=plt.figure(figsize=(2, 2))
 fig.add_subplot(2, 2, 1)
 plt.imshow(original_image)
