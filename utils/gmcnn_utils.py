@@ -4,8 +4,10 @@ import math
 import time
 import shutil
 import os, re
+import warnings
+warnings.filterwarnings("ignore", message=r"Passing", category=FutureWarning)
 import tensorflow as tf
-from model.tensorflow.ops import np_free_form_mask
+from models.gmcnn.ops import np_free_form_mask
 
 def f2uint(x):
     if x.__class__ == tf.Tensor:

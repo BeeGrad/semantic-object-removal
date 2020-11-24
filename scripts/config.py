@@ -74,7 +74,7 @@ class Config():
         # Test parameters
         self.test_im_path = '../tests/testImage.jpg'
         ''' Location of the image that is used to eval the program '''
-        self.test_mask_method = 'select_by_train_mask'
+        self.test_mask_method = 'freely_select_from_image'
         ''' Method to mask the test image
             - freely_select_from_image
             - select_by_edge
@@ -85,11 +85,12 @@ class Config():
         self.thresh1 = 200
         self.thresh2 = 250
         ''' Threshold values for canny edge detection '''
-        self.test_inpaint_method = 'EdgeConnect'
+        self.test_inpaint_method = 'Mathematical'
         ''' Method to inpaint the test image
             - Mathematical
             - EdgeConnect
             - Contextual
+            - GenerativeCNN
         '''
         self.test_edge_gen_path = f"../saves/EdgeConnectModel/pretrainedPaper/EdgeGenerator.pth"
         self.test_edge_disc_path = f"../saves/EdgeConnectModel/pretrainedPaper/EdgeDiscriminator.pth"

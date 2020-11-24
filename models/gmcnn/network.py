@@ -1,10 +1,12 @@
+import warnings
+warnings.filterwarnings("ignore", message=r"Passing", category=FutureWarning)
 import tensorflow as tf
-from model.tensorflow.ops import random_bbox, bbox2mask, local_patch
-from model.tensorflow.ops import priority_loss_mask
-from model.tensorflow.ops import id_mrf_reg
-from model.tensorflow.ops import gan_wgan_loss, gradients_penalty, random_interpolates
-from model.tensorflow.ops import free_form_mask_tf
-from util.tf_utils import f2uint
+from models.gmcnn.ops import random_bbox, bbox2mask, local_patch
+from models.gmcnn.ops import priority_loss_mask
+from models.gmcnn.ops import id_mrf_reg
+from models.gmcnn.ops import gan_wgan_loss, gradients_penalty, random_interpolates
+from models.gmcnn.ops import free_form_mask_tf
+from utils.gmcnn_utils import f2uint
 from functools import partial
 
 class GMCNNModel:
