@@ -31,7 +31,7 @@ def freely_select_from_image(org_img):
     edge = cv2.Canny(image_gray, cfg.thresh1, cfg.thresh2)
     # image_gray = rgb2gray(img) # Nedenini bilmiyorum ama ust 2 satir yerine bu 2 satiri kullaninca
     # edge = canny(image_gray, sigma=cfg.SIGMA) # Hata veriyor, edge uzerine line cizerken
-    print(type(edge))
+    # print(type(edge))
 
     def mouse_action(event, former_x, former_y, flags, param):
         global current_former_x, current_former_y, count, drawing

@@ -44,6 +44,7 @@ class Config():
                 -Contextual
                 -FPNGan
                 -VanillaGAN
+                -GenerativeCNN
                 '''
         self.saveName = f"{self.model}Model"
         ''' Save name that is going to be used while training '''
@@ -72,7 +73,7 @@ class Config():
         ''' Save locations for generator and discriminator for edge and inpaint models for train'''
 
         # Test parameters
-        self.test_im_path = '../tests/testImage.jpg'
+        self.test_im_path = './tests/testImage.jpg'
         ''' Location of the image that is used to eval the program '''
         self.test_mask_method = 'freely_select_from_image'
         ''' Method to mask the test image
@@ -167,3 +168,6 @@ class Config():
         # Vanilla Model Parameters
         self.vanilla_inpaint_gen_path = f"../saves/{self.saveName}/InpaintGenerator.pt"
         self.vanilla_inpaint_disc_path = f"../saves/{self.saveName}/InpaintDiscriminator.pt"
+
+        # Generative CNN Parameters
+        self.gmcnn_model_path = f"gmcnn-places2-256-stroke"

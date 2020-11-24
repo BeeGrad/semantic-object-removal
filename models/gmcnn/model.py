@@ -1,17 +1,20 @@
-import warnings
-warnings.filterwarnings("ignore", message=r"Passing", category=FutureWarning)
 import os
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import cv2
 import numpy as np
 import tensorflow as tf
 from utils.gmcnn_utils import generate_rect_mask, generate_stroke_mask
 from scripts.gmcnn_options import Options
+from scripts.config import Config
 from models.gmcnn.network import GMCNNModel
 
 class GenerativeCNN():
     def __init__(self):
-        self.path_dataset = 'gmcnn-places2-256-stroke'
         self.config = Options().parse()
+        self.path_dataset = Config().gmcnn_model_path
         self.model = GMCNNModel()
     
     def single_test(self, test_image, mask):
