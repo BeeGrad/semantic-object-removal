@@ -1,3 +1,6 @@
+import os
+import subprocess
+import glob
 import cv2
 import numpy as np
 from utils.utils import calculate_psnr
@@ -13,12 +16,11 @@ from skimage.measure import compare_ssim
 cfg = Config()
 original_image = cv2.imread(cfg.test_im_path)
 print("Original Image is loaded")
-print(original_image)
 
-if (cfg.test_mask_method == "freely_select_from_image"):
+if cfg.test_mask_method == "freely_select_from_image":
     input_image, mask, img_gray, edge_org = freely_select_from_image(original_image)
 
-if (cfg.test_mask_method == "select_by_edge"):
+if cfg.test_mask_method == "select_by_edge":
     input_image = select_by_edge(original_image)
 
 if (cfg.test_mask_method == "select_by_train_mask"):
@@ -60,6 +62,13 @@ print("Unified Model Section Started! ...")
 inpaintUnified = EdgeContextUnifiedModel()
 outputUnified, halfOutputUnified = inpaintUnified.single_test(input_image, mask, img_gray, edge_org)
 print("Unified Model Section Ended!")
+
+print("Generative CNN Model Section Started! ...")
+from models.gmcnn.model import GenerativeCNN
+inpaintGmCNN = GenerativeCNN()
+outputGmCNN = inpaintGmCNN.single_test(input_image, mask)
+print("Generative CNN Model Section Ended!")
+
 #######
 
 original_image = original_image/255
@@ -71,12 +80,14 @@ print(f"PSNR value of Math inpainted image: {calculate_psnr(outputMath/255, orig
 print(f"PSNR value of Contextual inpainted image: {calculate_psnr(outputContextual, original_image)}]")
 print(f"PSNR value of Edge inpainted image: {calculate_psnr(outputEdge, original_image)}]")
 print(f"PSNR value of Unified inpainted image: {calculate_psnr(outputUnified, original_image)}]")
+print(f"PSNR value of GmCNN inpainted image: {calculate_psnr(outputGmCNN/255, original_image)}]")
 
 print(f"SSIM value of masked image: {compare_ssim(original_image, input_image, data_range=1, win_size=11, multichannel=True)}]")
 print(f"SSIM value of Math inpainted image: {compare_ssim(original_image, outputMath/255, data_range=1, win_size=11, multichannel=True)}]")
 print(f"SSIM value of Contextual inpainted image: {compare_ssim(original_image, outputContextual, data_range=1, win_size=11, multichannel=True)}]")
 print(f"SSIM value of Edge inpainted image: {compare_ssim(original_image, outputEdge, data_range=1, win_size=11, multichannel=True)}]")
 print(f"SSIM value of Unified inpainted image: {compare_ssim(original_image, outputUnified, data_range=1, win_size=11, multichannel=True)}]")
+print(f"SSIM value of GmCNN inpainted image: {compare_ssim(original_image, outputGmCNN, data_range=1, win_size=11, multichannel=True)}]")
 
 # Math Section
 fig=plt.figure(figsize=(2, 2))
@@ -124,4 +135,14 @@ fig.add_subplot(2, 2, 3)
 plt.imshow(outputUnified)
 fig.add_subplot(2, 2, 4)
 plt.imshow(halfOutputUnified)
+plt.show()
+
+# Generative CNN Section
+fig=plt.figure(figsize=(2, 2))
+fig.add_subplot(2, 2, 1)
+plt.imshow(original_image)
+fig.add_subplot(2, 2, 2)
+plt.imshow(input_image)
+fig.add_subplot(2, 2, 3)
+plt.imshow(outputGmCNN)
 plt.show()

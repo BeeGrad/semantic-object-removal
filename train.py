@@ -26,4 +26,4 @@ elif cfg.model == "VanillaGAN":
     vanillaGanModel = VanillaGAN()
     vanillaGanModel.run(data)
 
-print(f"Training for {cfg.model} model is completed!")
+    print(f"Training for {cfg.model} model is completed!")

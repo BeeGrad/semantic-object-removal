@@ -8,6 +8,7 @@ from matplotlib import pyplot as plt
 
 cfg = Config()
 
+
 def calculate_psnr(img1, img2):
     mse = np.mean( (img2 - img1) ** 2 )# / (maskSize*3) # * 3 is for Channel
 

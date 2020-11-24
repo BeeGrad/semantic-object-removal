@@ -10,6 +10,7 @@ import torch
 cfg = Config()
 drawing = False
 
+
 def freely_select_from_image(org_img):
     """
         Input:
@@ -30,13 +31,13 @@ def freely_select_from_image(org_img):
     edge = cv2.Canny(image_gray, cfg.thresh1, cfg.thresh2)
     # image_gray = rgb2gray(img) # Nedenini bilmiyorum ama ust 2 satir yerine bu 2 satiri kullaninca
     # edge = canny(image_gray, sigma=cfg.SIGMA) # Hata veriyor, edge uzerine line cizerken
-    print(type(edge))
+    # print(type(edge))
 
     def mouse_action(event, former_x, former_y, flags, param):
         global current_former_x, current_former_y, count, drawing
         if event == cv2.EVENT_LBUTTONDOWN:
             drawing = True
-            current_former_x,current_former_y=former_x,former_y
+            current_former_x, current_former_y = former_x, former_y
 
         if event == cv2.EVENT_MOUSEMOVE:
             if drawing == True:
@@ -49,16 +50,15 @@ def freely_select_from_image(org_img):
         if event == cv2.EVENT_LBUTTONUP:
             drawing = False
 
-        if (event == cv2.EVENT_MOUSEWHEEL):
+        if event == cv2.EVENT_MOUSEWHEEL:
 
-            if (flags>0):
-                cfg.freely_select_mask_size += 1;
+            if flags > 0:
+                cfg.freely_select_mask_size += 1
             else:
-                cfg.freely_select_mask_size -= 1;
+                cfg.freely_select_mask_size -= 1
 
-
-    cv2.namedWindow('image')
-    cv2.setMouseCallback('image',mouse_action)
+    cv2.namedWindow("image")
+    cv2.setMouseCallback("image", mouse_action)
 
     while True:
         cv2.imshow("image", img)
@@ -67,6 +67,7 @@ def freely_select_from_image(org_img):
             break
 
     return img, mask, image_gray, edge
+
 
 def select_by_edge(org_img):
     """
@@ -83,8 +84,8 @@ def select_by_edge(org_img):
 
     def mouse_action(event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
-            for i in range(0,len(contours)):
-                r=cv2.pointPolygonTest(contours[i], (x,y),False)
+            for i in range(0, len(contours)):
+                r = cv2.pointPolygonTest(contours[i], (x, y), False)
                 if r > 0:
                     cv2.floodFill(img_gray, contours[i], (0, 0), 150)
 
@@ -93,7 +94,7 @@ def select_by_edge(org_img):
 
     v = np.median(img_gray)
 
-    #---- Apply automatic Canny edge detection using the computed median----
+    # ---- Apply automatic Canny edge detection using the computed median----
     cfg.thresh1 = int(max(0, (1.0 - 0.33) * v))
     cfg.thresh2 = int(min(255, (1.0 + 0.33) * v))
 
@@ -101,24 +102,26 @@ def select_by_edge(org_img):
         edged = cv2.Canny(img_gray, cfg.thresh1, cfg.thresh2)
         edged_not = cv2.bitwise_not(edged)
         ret, thresh = cv2.threshold(edged_not, 127, 255, 0)
-        contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy = cv2.findContours(
+            thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+        )
         # cv2.drawContours(edged, contours, -1, (0,255,0), 3)
-        cv2.namedWindow('image')
-        cv2.setMouseCallback('image',mouse_action)
+        cv2.namedWindow("image")
+        cv2.setMouseCallback("image", mouse_action)
         cv2.imshow("image", edged_not)
         k = cv2.waitKey(30) & 0xFF
         if k == 27:
             break
-        if k == ord('h'):
+        if k == ord("h"):
             cfg.thresh1 += 10
             print(f"thresh1: {cfg.thresh1}, thresh2: {cfg.thresh2}")
-        if k == ord('b'):
+        if k == ord("b"):
             cfg.thresh1 -= 10
             print(f"thresh1: {cfg.thresh1}, thresh2: {cfg.thresh2}")
-        if k == ord('j'):
+        if k == ord("j"):
             cfg.thresh2 += 10
             print(f"thresh1: {cfg.thresh1}, thresh2: {cfg.thresh2}")
-        if k == ord('n'):
+        if k == ord("n"):
             cfg.thresh2 -= 10
             print(f"thresh1: {cfg.thresh1}, thresh2: {cfg.thresh2}")
 

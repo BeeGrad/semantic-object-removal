@@ -154,3 +154,14 @@ dmypy.json
 ### VisualStudioCode Patch ###
 # Ignore all local history of files
 .history
+
+### Trained Models ###
+
+tests/
+
+# Pytorch
+*.pth
+
+# Tensorflow
+checkpoint*
+snap-*
