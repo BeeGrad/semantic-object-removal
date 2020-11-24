@@ -27,21 +27,3 @@ elif cfg.model == "VanillaGAN":
     vanillaGanModel.run(data)
 
     print(f"Training for {cfg.model} model is completed!")
-
-
-def train_gmcnn():
-    cfg = Config()
-    data = DataRead(cfg.dataset, cfg.masking_type, cfg.batch_size)
-    data.create_data_loaders()
-
-    if cfg.show_sample_data:
-        data.show_sample_data()
-
-    if cfg.show_masked_data:
-        data.show_masked_and_original()
-
-    if cfg.model == "GenerativeCNN":
-        gmcnnModel = GMCNN(data.train_data_loader, data.test_data_loader)
-        gmcnnModel.train()
-
-    print(f"Training for {cfg.model} model is completed!")

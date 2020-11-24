@@ -3,7 +3,6 @@ import torch.nn as nn
 import torchvision.models as models
 import torch.autograd as autograd
 import torch.nn.functional as F
-from models.gmcnn.layer import VGG19FeatLayer
 from functools import reduce
 
 
