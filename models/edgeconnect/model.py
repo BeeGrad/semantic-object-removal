@@ -9,6 +9,7 @@ from scripts.loss import AdversarialLoss, PerceptualLoss, StyleLoss
 from scripts.config import Config
 from skimage.feature import canny
 from skimage.color import rgb2gray
+from utils.utils import calculate_psnr, show_sample_input_data_edgeconnect
 
 cfg = Config()
 
@@ -50,10 +51,10 @@ class EdgeModel(BaseModel):
         self.adversarial_loss = AdversarialLoss(type=cfg.GAN_LOSS)
 
         self.gen_optimizer = optim.Adam(params=self.generator.parameters(),
-            lr=float(cfg.LR), betas=(cfg.BETA1, cfg.BETA2))
+            lr=float(cfg.edge_LR), betas=(cfg.edge_BETA1, cfg.edge_BETA2))
 
         self.dis_optimizer = optim.Adam(params=self.discriminator.parameters(),
-            lr=float(cfg.LR) * float(cfg.D2G_LR), betas=(cfg.BETA1, cfg.BETA2))
+            lr=float(cfg.edge_LR) * float(cfg.edge_D2G_LR), betas=(cfg.edge_BETA1, cfg.edge_BETA2))
 
     def step(self, images, edges, masks):
         """
@@ -121,7 +122,7 @@ class EdgeModel(BaseModel):
     def forward(self, images, edges, masks):
         """
         Input:
-            images: original images
+            images: original gray images
             edges: images with only edge information
             masks: images with mask information
         Output:
@@ -146,11 +147,11 @@ class EdgeModel(BaseModel):
         """
 
         if dis_loss is not None:
-            dis_loss.backward()
+            dis_loss.backward(retain_graph=True)
         self.dis_optimizer.step()
 
         if gen_loss is not None:
-            gen_loss.backward()
+            gen_loss.backward(retain_graph=True)
         self.gen_optimizer.step()
 
 class InpaintingModel(BaseModel):
@@ -173,10 +174,10 @@ class InpaintingModel(BaseModel):
         self.adversarial_loss = AdversarialLoss(type=cfg.GAN_LOSS)
 
         self.gen_optimizer = optim.Adam(params=self.generator.parameters(),
-            lr=float(cfg.LR), betas=(cfg.BETA1, cfg.BETA2))
+            lr=float(cfg.edge_LR), betas=(cfg.edge_BETA1, cfg.edge_BETA2))
 
         self.dis_optimizer = optim.Adam(params=self.discriminator.parameters(),
-            lr=float(cfg.LR) * float(cfg.D2G_LR), betas=(cfg.BETA1, cfg.BETA2))
+            lr=float(cfg.edge_LR) * float(cfg.edge_D2G_LR), betas=(cfg.edge_BETA1, cfg.edge_BETA2))
 
     def step(self, images, edges, masks):
         """
@@ -215,13 +216,6 @@ class InpaintingModel(BaseModel):
         dis_real_loss = self.adversarial_loss(dis_real, True, True)
         dis_fake_loss = self.adversarial_loss(dis_fake, False, True)
         dis_loss += (dis_real_loss + dis_fake_loss) / 2
-
-
-        # generator adversarial loss
-        gen_input_fake = outputs
-        gen_fake, _ = self.discriminator(gen_input_fake)        # in: (grayscale(1) + edge(1))
-        gen_gan_loss = self.adversarial_loss(gen_fake, True, False)
-        gen_loss += gen_gan_loss
 
 
         # generator adversarial loss
@@ -284,16 +278,15 @@ class InpaintingModel(BaseModel):
         Description:
             step both optimizers
         """
-        dis_loss.backward()
+        dis_loss.backward(retain_graph=True)
         self.dis_optimizer.step()
 
-        gen_loss.backward()
+        gen_loss.backward(retain_graph=True)
         self.gen_optimizer.step()
 
 class EdgeConnect():
-    def __init__(self, train_data_loader = None, test_data_loader = None):
-        self.train_loader = train_data_loader
-        self.test_data_loader = test_data_loader
+    def __init__(self):
+        super(EdgeConnect, self).__init__()
 
         self.edge_model = EdgeModel().to(cfg.DEVICE)
         self.inpaint_model = InpaintingModel().to(cfg.DEVICE)
@@ -366,7 +359,7 @@ class EdgeConnect():
 
         return output_image.detach().numpy(), e_outputs.detach().numpy()
 
-    def train(self):
+    def run(self, data):
         """
         Input:
             none
@@ -375,20 +368,40 @@ class EdgeConnect():
         Description:
             Trains both edge and inpaint model in order then update the parameters
         """
+        data.create_data_loaders()
+        self.edge_model.train()
+        self.inpaint_model.train()
+
         if cfg.loadModel:
             self.load()
+
         for i in range(self.iteration, cfg.epoch_num):
             self.iteration += 1
-            for images, masked_images, images_gray, masks, edges in self.train_loader:
+            psnr_values = []
+            for i, images in enumerate(data.train_loader):
+                images,images_gray, edges, masks = data.return_inputs(images[0])
+                if cfg.show_sample_data:
+                    show_sample_input_data_edgeconnect(images, images_gray, edges, masks)
+                    cfg.show_sample_data = False
+
+                images = images.to(cfg.DEVICE)
+                images_gray = images_gray.to(cfg.DEVICE)
+                edges = edges.to(cfg.DEVICE)
+                masks = masks.to(cfg.DEVICE)
+
                 e_outputs, e_gen_loss, e_dis_loss, e_logs = self.edge_model.step(images_gray, edges, masks)
                 e_outputs = e_outputs * masks + edges * (1 - masks)
                 i_outputs, i_gen_loss, i_dis_loss, i_logs = self.inpaint_model.step(images, e_outputs, masks)
                 outputs_merged = (i_outputs * masks) + (images * (1 - masks))
-                print(i_dis_loss)
+
                 self.inpaint_model.backward(i_gen_loss, i_dis_loss)
                 self.edge_model.backward(e_gen_loss, e_dis_loss)
-            break
+                psnr = calculate_psnr(images.squeeze().cpu().detach().numpy(), outputs_merged.squeeze().cpu().detach().numpy())
+                psnr_values.append(psnr)
+                print(f"{i}/{len(data.train_loader) / cfg.batch_size}")
 
+            print(f"Epoch {self.iteration} is done!")
+            print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")
             self.save()
 
     def save(self):

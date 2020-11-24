@@ -13,7 +13,7 @@ class Config():
         """
         # Train Parameters
         self.DEVICE = torch.device("cpu")
-        ''' Choose to train on cpu or gpu '''
+        ''' Choose to train on cpu or cuda '''
         self.epoch_num = 100
         ''' Choose number of epochs '''
 
@@ -23,7 +23,7 @@ class Config():
                 -places2
                 -cifar10
                 '''
-        self.batch_size = 1
+        self.batch_size = 2
         ''' Batch Size for DataLoader '''
         self.masking_type = "10-20percentage"
         ''' Current Choices for masking types:
@@ -32,17 +32,18 @@ class Config():
                 '''
         self.show_sample_data = True
         ''' Choose if a sample from dataset will be shown before training'''
-        self.show_masked_data = False
-        ''' Choose if a sample from masked data will be shown before training'''
-        self.SIGMA = 1
+        self.SIGMA = 2
         ''' Parameter for canny edge detector '''
-        self.max_pixel_value = 255.0
+        self.max_pixel_value = 1.0
         ''' Maximum value in an image, necessary to calculate PSNR '''
 
-        # Model Parameters
+        # EdgeConnect Model Parameters
         self.model = "EdgeConnect"
         ''' Current Choices for Deep Learning Models:
                 -EdgeConnect
+                -Contextual
+                -FPNGan
+                -VanillaGAN
                 '''
         self.saveName = f"{self.model}Model"
         ''' Save name that is going to be used while training '''
@@ -50,10 +51,10 @@ class Config():
         ''' Choose to load model '''
         self.loadName = f"{self.model}Model"
         ''' Load name to load the pre-trained model '''
-        self.LR = 0.0001
-        self.BETA1 = 0.0
-        self.BETA2 = 0.9
-        self.D2G_LR = 0.1
+        self.edge_LR = 0.0001
+        self.edge_BETA1 = 0.0
+        self.edge_BETA2 = 0.9
+        self.edge_D2G_LR = 0.1
         ''' Learnin rate and Beta parameters for training'''
         self.GAN_LOSS = "nsgan"
         ''' Possible Choices :nsgan | lsgan | hinge '''
@@ -71,12 +72,13 @@ class Config():
         ''' Save locations for generator and discriminator for edge and inpaint models for train'''
 
         # Test parameters
-        self.test_im_path = '../foreground-substraction/test/test005.jpg'
+        self.test_im_path = '../tests/testImage.jpg'
         ''' Location of the image that is used to eval the program '''
-        self.test_mask_method = 'freely_select_from_image'
+        self.test_mask_method = 'select_by_train_mask'
         ''' Method to mask the test image
             - freely_select_from_image
             - select_by_edge
+            - select_by_train_mask
          '''
         self.freely_select_mask_size = 15
         ''' Size of the brush for freely select method '''
@@ -87,13 +89,13 @@ class Config():
         ''' Method to inpaint the test image
             - Mathematical
             - EdgeConnect
+            - Contextual
         '''
-        self.test_edge_gen_path = f"../saves/{self.saveName}/pretrainedPaper/EdgeGenerator.pth"
-        self.test_edge_disc_path = f"../saves/{self.saveName}/pretrainedPaper/EdgeDiscriminator.pth"
-        self.test_inpaint_gen_path = f"../saves/{self.saveName}/pretrainedPaper/InpaintGenerator.pth"
-        self.test_inpaint_disc_path = f"../saves/{self.saveName}/pretrainedPaper/InpaintDiscriminator.pth"
+        self.test_edge_gen_path = f"../saves/EdgeConnectModel/pretrainedPaper/EdgeGenerator.pth"
+        self.test_edge_disc_path = f"../saves/EdgeConnectModel/pretrainedPaper/EdgeDiscriminator.pth"
+        self.test_inpaint_gen_path = f"../saves/EdgeConnectModel/pretrainedPaper/InpaintGenerator.pth"
+        self.test_inpaint_disc_path = f"../saves/EdgeConnectModel/pretrainedPaper/InpaintDiscriminator.pth"
         ''' Save locations for generator and discriminator for edge and inpaint models for test'''
-
 
         # Traditional Models parameters
         self.mathematical_method = "navier-strokes"
@@ -101,3 +103,66 @@ class Config():
             - navier-strokes
             - fast-marching
          '''
+
+         # Contextual Generative Model parameters
+        self.context_activation = 'elu'
+        ''' Activation function that is going to be used in training of generative contual CNN
+            -elu
+            -relu
+            -lrelu
+        '''
+        self.context_conv_type = 'normal'
+        ''' Convolution layer type for contextual model
+         -normal
+         -transpose
+        '''
+        self.context_input_dim = 3
+        self.context_gen_feat_dim = 32
+        self.context_dis_feat_dim = 32
+        ''' Input and output sizes for gen and dis networks '''
+        self.use_cuda = False
+        ''' Choose to use cuda '''
+        self.context_LR = 0.0001
+        self.context_BETA1 = 0.5
+        self.context_BETA2 = 0.9
+        ''' Optimizer parameters '''
+        self.context_image_shape = [256,256,3]
+        self.context_mask_shape = [128,128]
+        self.context_margin = [0,0]
+        self.mask_batch_same = True
+        self.context_batch_size = 5
+        self.context_max_delta_shape = [32,32]
+        self.context_mosaic_unit_size = 12
+        ''' Random bbox parameters '''
+        self.context_mask_type = "hole"
+        ''' Masking type for bbox2mask
+             - hole
+             - mosaic
+                '''
+        self.context_global_wgan_loss_alpha = 1.0
+        ''' Context train parameters '''
+        self.n_critic = 5
+        ''' iteration number to compute g loss '''
+        self.spatial_discounting_mask = 0.9
+        self.discounted_mask = True
+        ''' Spatial discounting mask parameters '''
+        self.coarse_l1_alpha = 1.2
+        self.context_l1_loss_alpha =1.2
+        self.context_ae_loss_alpha =1.2
+        self.context_gan_loss_alpha =0.001
+        self.context_wgan_gp_lambda = 10
+        ''' Context train parameters '''
+        self.context_discs_path = f"../saves/ContextualModel/pretrainedOur/Discriminators.pth"
+        self.context_generator_path = f"../saves/ContextualModel/pretrainedOur/Generator.pth"
+        ''' Model Save and Load Paths '''
+        self.test_context_gen_path = f"../saves/ContextualModel/pretrainedOur/Generator.pth"
+        self.test_context_discs_path = f"../saves/ContextualModel/pretrainedOur/Discriminators.pth"
+        ''' Model Load Paths '''
+        # FPN Model Parameters
+        self.fpn_inpaint_gen_path = f"../saves/{self.saveName}/InpaintGenerator.pt"
+        self.fpn_inpaint_disc_path = f"../saves/{self.saveName}/InpaintDiscriminator.pt"
+        self.fpn_fpnNetwork_path = f"../saves/{self.saveName}/FPN.pt"
+
+        # Vanilla Model Parameters
+        self.vanilla_inpaint_gen_path = f"../saves/{self.saveName}/InpaintGenerator.pt"
+        self.vanilla_inpaint_disc_path = f"../saves/{self.saveName}/InpaintDiscriminator.pt"

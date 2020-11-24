@@ -1,123 +1,316 @@
+import torch
 import numpy as np
 import math
+import cv2
 from scripts.config import Config
-import torch.autograd as autograd
-
+from matplotlib import pyplot as plt
 # Math utilities for model creating, training, and testing.
 
 cfg = Config()
 
 
 def calculate_psnr(img1, img2):
-    mse = np.mean((img2 - img1) ** 2)
+    mse = np.mean( (img2 - img1) ** 2 )# / (maskSize*3) # * 3 is for Channel
+
     if mse == 0:
         return 100
     PIXEL_MAX = cfg.max_pixel_value
     return 20 * math.log10(PIXEL_MAX / math.sqrt(mse))
 
+def extract_image_patches(images, ksizes, strides, rates, padding='same'):
+    """
+    Input:
+        images: [batch, channels, in_rows, in_cols]. A 4-D Tensor with shape
+        ksizes: [ksize_rows, ksize_cols]. The size of the sliding window for
+            each dimension of images
+        strides: [stride_rows, stride_cols]
+        rates: [dilation_rows, dilation_cols]
+    Output:
+        A Tensor
+    Description:
+        Extract patches from images and put them in the C output dimension.
+        padding
+    """
+    assert len(images.size()) == 4
+    assert padding in ['same', 'valid']
+    batch_size, channel, height, width = images.size()
 
-def gradient_penalty(xin, yout, mask=None):
-    gradients = autograd.grad(
-        yout,
-        xin,
-        create_graph=True,
-        grad_outputs=torch.ones(yout.size()).cuda(),
-        retain_graph=True,
-        only_inputs=True,
-    )[0]
-    if mask is not None:
-        gradients = gradients * mask
-    gradients = gradients.view(gradients.size(0), -1)
-    gp = ((gradients.norm(2, dim=1) - 1) ** 2).mean()
-    return gp
+    if padding == 'same':
+        images = same_padding(images, ksizes, strides, rates)
+    elif padding == 'valid':
+        pass
 
+    unfold = torch.nn.Unfold(kernel_size=ksizes,
+                             dilation=rates,
+                             padding=0,
+                             stride=strides)
+    patches = unfold(images)
+    return patches  # [N, C*k*k, L], L is the total number of such blocks
 
-def random_interpolate(gt, pred):
-    batch_size = gt.size(0)
-    alpha = torch.rand(batch_size, 1, 1, 1).cuda()
-    # alpha = alpha.expand(gt.size()).cuda()
-    interpolated = gt * alpha + pred * (1 - alpha)
-    return interpolated
+def make_color_wheel():
+    """
+    Input:
+        None
+    Output:
+        colorwheel
+    Description:
 
+    """
+    RY, YG, GC, CB, BM, MR = (15, 6, 4, 11, 13, 6)
+    ncols = RY + YG + GC + CB + BM + MR
+    colorwheel = np.zeros([ncols, 3])
+    col = 0
+    # RY
+    colorwheel[0:RY, 0] = 255
+    colorwheel[0:RY, 1] = np.transpose(np.floor(255 * np.arange(0, RY) / RY))
+    col += RY
+    # YG
+    colorwheel[col:col + YG, 0] = 255 - np.transpose(np.floor(255 * np.arange(0, YG) / YG))
+    colorwheel[col:col + YG, 1] = 255
+    col += YG
+    # GC
+    colorwheel[col:col + GC, 1] = 255
+    colorwheel[col:col + GC, 2] = np.transpose(np.floor(255 * np.arange(0, GC) / GC))
+    col += GC
+    # CB
+    colorwheel[col:col + CB, 1] = 255 - np.transpose(np.floor(255 * np.arange(0, CB) / CB))
+    colorwheel[col:col + CB, 2] = 255
+    col += CB
+    # BM
+    colorwheel[col:col + BM, 2] = 255
+    colorwheel[col:col + BM, 0] = np.transpose(np.floor(255 * np.arange(0, BM) / BM))
+    col += + BM
+    # MR
+    colorwheel[col:col + MR, 2] = 255 - np.transpose(np.floor(255 * np.arange(0, MR) / MR))
+    colorwheel[col:col + MR, 0] = 255
+    return colorwheel
 
-def gauss_kernel(size=21, sigma=3, inchannels=3, outchannels=3):
-    interval = (2 * sigma + 1.0) / size
-    x = np.linspace(-sigma - interval / 2, sigma + interval / 2, size + 1)
-    ker1d = np.diff(st.norm.cdf(x))
-    kernel_raw = np.sqrt(np.outer(ker1d, ker1d))
-    kernel = kernel_raw / kernel_raw.sum()
-    out_filter = np.array(kernel, dtype=np.float32)
-    out_filter = out_filter.reshape((1, 1, size, size))
-    out_filter = np.tile(out_filter, [outchannels, inchannels, 1, 1])
-    return out_filter
+def compute_color(u, v):
+    """
+    Input:
+        flow:
+    Output:
+        Img array:
+    Description:
 
+    """
+    h, w = u.shape
+    img = np.zeros([h, w, 3])
+    nanIdx = np.isnan(u) | np.isnan(v)
+    u[nanIdx] = 0
+    v[nanIdx] = 0
+    # colorwheel = COLORWHEEL
+    colorwheel = make_color_wheel()
+    ncols = np.size(colorwheel, 0)
+    rad = np.sqrt(u ** 2 + v ** 2)
+    a = np.arctan2(-v, -u) / np.pi
+    fk = (a + 1) / 2 * (ncols - 1) + 1
+    k0 = np.floor(fk).astype(int)
+    k1 = k0 + 1
+    k1[k1 == ncols + 1] = 1
+    f = fk - k0
+    for i in range(np.size(colorwheel, 1)):
+        tmp = colorwheel[:, i]
+        col0 = tmp[k0 - 1] / 255
+        col1 = tmp[k1 - 1] / 255
+        col = (1 - f) * col0 + f * col1
+        idx = rad <= 1
+        col[idx] = 1 - rad[idx] * (1 - col[idx])
+        notidx = np.logical_not(idx)
+        col[notidx] *= 0.75
+        img[:, :, i] = np.uint8(np.floor(255 * col * (1 - nanIdx)))
+    return img
 
-def np_free_form_mask(maxVertex, maxLength, maxBrushWidth, maxAngle, h, w):
-    mask = np.zeros((h, w, 1), np.float32)
-    numVertex = np.random.randint(maxVertex + 1)
-    startY = np.random.randint(h)
-    startX = np.random.randint(w)
-    brushWidth = 0
-    for i in range(numVertex):
-        angle = np.random.randint(maxAngle + 1)
-        angle = angle / 360.0 * 2 * np.pi
-        if i % 2 == 0:
-            angle = 2 * np.pi - angle
-        length = np.random.randint(maxLength + 1)
-        brushWidth = np.random.randint(10, maxBrushWidth + 1) // 2 * 2
-        nextY = startY + length * np.cos(angle)
-        nextX = startX + length * np.sin(angle)
+def same_padding(images, ksizes, strides, rates):
+    """
+    Input:
+        images: [batch, channels, in_rows, in_cols]. A 4-D Tensor with shape
+        ksizes: [ksize_rows, ksize_cols]. The size of the sliding window for
+            each dimension of images
+        strides: [stride_rows, stride_cols]
+        rates: [dilation_rows, dilation_cols]
+    Output:
+        images: return padded images
+    Description:
+        (Not sure but probably) returns images that is padded to have same size
+        with given kernel sizes
+    """
+    assert len(images.size()) == 4
+    batch_size, channel, rows, cols = images.size()
+    out_rows = (rows + strides[0] - 1) // strides[0]
+    out_cols = (cols + strides[1] - 1) // strides[1]
+    effective_k_row = (ksizes[0] - 1) * rates[0] + 1
+    effective_k_col = (ksizes[1] - 1) * rates[1] + 1
+    padding_rows = max(0, (out_rows-1)*strides[0]+effective_k_row-rows)
+    padding_cols = max(0, (out_cols-1)*strides[1]+effective_k_col-cols)
+    # Pad the input
+    padding_top = int(padding_rows / 2.)
+    padding_left = int(padding_cols / 2.)
+    padding_bottom = padding_rows - padding_top
+    padding_right = padding_cols - padding_left
+    paddings = (padding_left, padding_right, padding_top, padding_bottom)
+    images = torch.nn.ZeroPad2d(paddings)(images)
+    return images
 
-        nextY = np.maximum(np.minimum(nextY, h - 1), 0).astype(np.int)
-        nextX = np.maximum(np.minimum(nextX, w - 1), 0).astype(np.int)
+def flow_to_image(flow):
+    """
+    Input:
+        flow:
+    Output:
+        Img array:
+    Description:
+        Transfer flow map to image.
+        Part of code forked from flownet.
+    """
+    out = []
+    maxu = -999.
+    maxv = -999.
+    minu = 999.
+    minv = 999.
+    maxrad = -1
+    for i in range(flow.shape[0]):
+        u = flow[i, :, :, 0]
+        v = flow[i, :, :, 1]
+        idxunknow = (abs(u) > 1e7) | (abs(v) > 1e7)
+        u[idxunknow] = 0
+        v[idxunknow] = 0
+        maxu = max(maxu, np.max(u))
+        minu = min(minu, np.min(u))
+        maxv = max(maxv, np.max(v))
+        minv = min(minv, np.min(v))
+        rad = np.sqrt(u ** 2 + v ** 2)
+        maxrad = max(maxrad, np.max(rad))
+        u = u / (maxrad + np.finfo(float).eps)
+        v = v / (maxrad + np.finfo(float).eps)
+        img = compute_color(u, v)
+        out.append(img)
+    return np.float32(np.uint8(out))
 
-        cv2.line(mask, (startY, startX), (nextY, nextX), 1, brushWidth)
-        cv2.circle(mask, (startY, startX), brushWidth // 2, 2)
+def reduce_mean(x, axis=None, keepdim=False):
+    """
+    Input:
+        x: matrix
+    Output:
+        x: matrix
+    Description:
+        find the mean of all dimensions
+    """
+    if not axis:
+        axis = range(len(x.shape))
+    for i in sorted(axis, reverse=True):
+        x = torch.mean(x, dim=i, keepdim=keepdim)
+    return x
 
-        startY, startX = nextY, nextX
-    cv2.circle(mask, (startY, startX), brushWidth // 2, 2)
-    return mask
+def reduce_sum(x, axis=None, keepdim=False):
+    """
+    Input:
 
+    Output:
 
-def generate_rect_mask(im_size, mask_size, margin=8, rand_mask=True):
-    mask = np.zeros((im_size[0], im_size[1])).astype(np.float32)
-    if rand_mask:
-        sz0, sz1 = mask_size[0], mask_size[1]
-        of0 = np.random.randint(margin, im_size[0] - sz0 - margin)
-        of1 = np.random.randint(margin, im_size[1] - sz1 - margin)
+    Description:
+
+    """
+    if not axis:
+        axis = range(len(x.shape))
+    for i in sorted(axis, reverse=True):
+        x = torch.sum(x, dim=i, keepdim=keepdim)
+    return x
+
+def random_bbox():
+    """
+    Input:
+        none
+    Output:
+        tuple: (top, left, height, width)
+    Description:
+        Generate a random tlhw with configuration to create a box on image.
+    """
+    img_height, img_width, _ = cfg.context_image_shape
+    h, w = cfg.context_mask_shape
+    margin_height, margin_width = cfg.context_margin
+    maxt = img_height - margin_height - h
+    maxl = img_width - margin_width - w
+    bbox_list = []
+    if cfg.mask_batch_same:
+        t = np.random.randint(margin_height, maxt)
+        l = np.random.randint(margin_width, maxl)
+        bbox_list.append((t, l, h, w))
+        bbox_list = bbox_list * cfg.context_batch_size
     else:
-        sz0, sz1 = mask_size[0], mask_size[1]
-        of0 = (im_size[0] - sz0) // 2
-        of1 = (im_size[1] - sz1) // 2
-    mask[of0 : of0 + sz0, of1 : of1 + sz1] = 1
-    mask = np.expand_dims(mask, axis=0)
-    mask = np.expand_dims(mask, axis=0)
-    rect = np.array([[of0, sz0, of1, sz1]], dtype=int)
-    return mask, rect
+        for i in range(cfg.context_batch_size):
+            t = np.random.randint(margin_height, maxt)
+            l = np.random.randint(margin_width, maxl)
+            bbox_list.append((t, l, h, w))
 
+    return torch.tensor(bbox_list, dtype=torch.int64)
 
-def generate_stroke_mask(
-    im_size, parts=10, maxVertex=20, maxLength=100, maxBrushWidth=24, maxAngle=360
-):
-    mask = np.zeros((im_size[0], im_size[1], 1), dtype=np.float32)
-    for i in range(parts):
-        mask = mask + np_free_form_mask(
-            maxVertex, maxLength, maxBrushWidth, maxAngle, im_size[0], im_size[1]
-        )
-    mask = np.minimum(mask, 1.0)
-    mask = np.transpose(mask, [2, 0, 1])
-    mask = np.expand_dims(mask, 0)
-    return mask
+def local_patch(x, bbox_list):
+    """
+    Input:
 
+    Output:
 
-def generate_mask(type, im_size, mask_size):
-    if type == "rect":
-        return generate_rect_mask(im_size, mask_size)
+    Description:
+
+    """
+    assert len(x.size()) == 4
+    patches = []
+    for i, bbox in enumerate(bbox_list):
+        t, l, h, w = bbox
+        patches.append(x[i, :, t:t + h, l:l + w])
+    return torch.stack(patches, dim=0)
+
+def spatial_discounting_mask():
+    """
+    Input:
+        config: Config should have configuration including HEIGHT, WIDTH,
+        DISCOUNTED_MASK.
+    Output:
+        tf.Tensor: spatial discounting mask
+    Description:
+        Generate spatial discounting mask constant.
+        Spatial discounting mask is first introduced in publication:
+            Generative Image Inpainting with Contextual Attention, Yu et al.
+    """
+    gamma = cfg.spatial_discounting_mask
+    height, width = cfg.context_mask_shape
+    shape = [1, 1, height, width]
+    if cfg.discounted_mask:
+        mask_values = np.ones((height, width))
+        for i in range(height):
+            for j in range(width):
+                mask_values[i, j] = max(
+                    gamma ** min(i, height - i),
+                    gamma ** min(j, width - j))
+        mask_values = np.expand_dims(mask_values, 0)
+        mask_values = np.expand_dims(mask_values, 0)
     else:
-        return generate_stroke_mask(im_size), None
+        mask_values = np.ones(shape)
+    spatial_discounting_mask_tensor = torch.tensor(mask_values, dtype=torch.float32)
+    if cfg.use_cuda:
+        spatial_discounting_mask_tensor = spatial_discounting_mask_tensor.cuda()
+    return spatial_discounting_mask_tensor
 
+def show_sample_input_data_context(img1, img2, img3):
+    fig=plt.figure(figsize=(2, 2))
 
-def getLatest(folder_path):
-    files = glob.glob(folder_path)
-    file_times = list(map(lambda x: time.ctime(os.path.getctime(x)), files))
-    return files[sorted(range(len(file_times)), key=lambda x: file_times[x])[-1]]
+    fig.add_subplot(2, 2, 1)
+    plt.imshow(img1[0].permute(1,2,0).numpy())
+    fig.add_subplot(2, 2, 2)
+    plt.imshow(img2[0].permute(1,2,0).detach().numpy())
+    fig.add_subplot(2, 2, 3)
+    plt.imshow(img3.squeeze()[0].numpy(), cmap='gray')
+    plt.show()
+
+def show_sample_input_data_edgeconnect(img1, img2, img3, img4):
+    fig=plt.figure(figsize=(2, 2))
+
+    fig.add_subplot(2, 2, 1)
+    plt.imshow(img1[0].permute(1,2,0).numpy())
+    fig.add_subplot(2, 2, 2)
+    plt.imshow(img2.squeeze()[0].numpy(), cmap='gray')
+    fig.add_subplot(2, 2, 3)
+    plt.imshow(img3.squeeze()[0].numpy(), cmap='gray')
+    fig.add_subplot(2, 2, 4)
+    plt.imshow(img4.squeeze()[0].numpy(), cmap='gray')
+    plt.show()

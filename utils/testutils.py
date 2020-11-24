@@ -2,6 +2,10 @@ import cv2
 import numpy as np
 from scripts.config import Config
 from matplotlib import pyplot as plt
+from skimage.feature import canny
+from skimage.color import rgb2gray
+from scripts.dataOperations import DataRead
+import torch
 
 cfg = Config()
 drawing = False
@@ -20,9 +24,14 @@ def freely_select_from_image(org_img):
             Freely remove any area from image.
         """
     img = org_img.copy()
-    mask = np.empty_like(img)
+    mask = np.empty_like(img[:,:,0])
+    edge = np.empty_like(img[:,:,0])
+    image_gray = np.empty_like(img[:,:,0])
     image_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     edge = cv2.Canny(image_gray, cfg.thresh1, cfg.thresh2)
+    # image_gray = rgb2gray(img) # Nedenini bilmiyorum ama ust 2 satir yerine bu 2 satiri kullaninca
+    # edge = canny(image_gray, sigma=cfg.SIGMA) # Hata veriyor, edge uzerine line cizerken
+    print(type(edge))
 
     def mouse_action(event, former_x, former_y, flags, param):
         global current_former_x, current_former_y, count, drawing
@@ -32,20 +41,9 @@ def freely_select_from_image(org_img):
 
         if event == cv2.EVENT_MOUSEMOVE:
             if drawing == True:
-                cv2.line(
-                    img,
-                    (current_former_x, current_former_y),
-                    (former_x, former_y),
-                    (255, 255, 255),
-                    cfg.freely_select_mask_size,
-                )
-                cv2.line(
-                    edge,
-                    (current_former_x, current_former_y),
-                    (former_x, former_y),
-                    (0, 0, 0),
-                    cfg.freely_select_mask_size,
-                )
+                cv2.line(img,(current_former_x,current_former_y),(former_x,former_y),(255,255,255), cfg.freely_select_mask_size)
+                cv2.line(edge,(current_former_x,current_former_y),(former_x,former_y),(0,0,0), cfg.freely_select_mask_size)
+                cv2.line(mask,(current_former_x,current_former_y),(former_x,former_y),(255,255,255), cfg.freely_select_mask_size)
                 current_former_x = former_x
                 current_former_y = former_y
 
@@ -68,8 +66,6 @@ def freely_select_from_image(org_img):
         if k == 27:
             break
 
-    mask = cv2.subtract(img[:, :, 0], org_img[:, :, 0])
-    ret, mask = cv2.threshold(mask, 1, 255, cv2.THRESH_BINARY)
     return img, mask, image_gray, edge
 
 
@@ -130,3 +126,14 @@ def select_by_edge(org_img):
             print(f"thresh1: {cfg.thresh1}, thresh2: {cfg.thresh2}")
 
     return org_img
+
+def select_by_train_mask(org_img):
+    print(org_img.shape)
+    data = DataRead(cfg.dataset, cfg.masking_type, cfg.batch_size)
+    imgs, gray_images, edges, masks = data.return_inputs(torch.FloatTensor(org_img).unsqueeze(0).permute(0,3,1,2))
+    edges = (1 - edges)
+    imgs = np.uint8(imgs.squeeze(0).permute(1,2,0).numpy() * 255)
+    gray_images = np.uint8(gray_images.squeeze(0).squeeze(0).numpy() * 255)
+    edges = np.uint8(edges.squeeze(0).squeeze(0).numpy() * 255)
+    masks = np.uint8(masks.squeeze(0).squeeze(0).numpy() * 255)
+    return imgs, gray_images, edges, masks
