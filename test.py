@@ -16,7 +16,6 @@ from skimage.measure import compare_ssim
 cfg = Config()
 original_image = cv2.imread(cfg.test_im_path)
 print("Original Image is loaded")
-print(original_image)
 
 if cfg.test_mask_method == "freely_select_from_image":
     input_image, mask, img_gray, edge_org = freely_select_from_image(original_image)
