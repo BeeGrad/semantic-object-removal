@@ -20,8 +20,31 @@ class VanillaGAN():
         self.dis_optimizer = optim.Adam(params=self.inpaint_model.discriminator.parameters(),
             lr=float(cfg.edge_LR) * float(cfg.edge_D2G_LR), betas=(cfg.edge_BETA1, cfg.edge_BETA2))
 
+    def single_test(self, test_image, mask):
+        self.load()
+
+        test_image = torch.FloatTensor(test_image) / 255
+        mask = torch.FloatTensor(mask) / 255
+
+        test_image = test_image.permute(2,0,1)
+        test_image = test_image.unsqueeze(0)
+        mask = mask.unsqueeze(0)
+        mask = mask.unsqueeze(0)
+
+        print(f"Mask shape: {mask.shape}")
+        print(f"Test Image shape: {test_image.shape}")
+
+        out, gen_loss, dis_loss = self.inpaint_model.step(test_image, mask, test_image)
+        out = (out * mask) + (test_image * (1 - mask))
+
+        out = out.squeeze(0).permute(1,2,0)
+        print(f"Output shape: {out.shape}")
+
+        return out.detach().numpy()
+
     def run(self, data):
         data.create_data_loaders()
+        self.inpaint_model.train()
 
         if cfg.loadModel:
             self.load()
@@ -44,11 +67,11 @@ class VanillaGAN():
                 masked_images = masked_images.to(cfg.DEVICE)
                 masks = masks.to(cfg.DEVICE)
 
-                out, gen_loss, dis_loss, logs = self.inpaint_model.step(images, masks)
+                out, gen_loss, dis_loss = self.inpaint_model.step(masked_images, masks, images)
                 out = (out * masks) + (images * (1 - masks))
 
-                # print(f"Shape of Inpainted Image (Output of Inpaint GAN):{out.shape}")
-                # show_sample_input_data_context(masked_images, out, masks)
+                #print(f"Shape of Inpainted Image (Output of Inpaint GAN):{out.shape}")
+                #show_sample_input_data_context(masked_images.cpu(), out.cpu(), masks.cpu())
 
                 gen_loss.backward()
                 self.gen_optimizer.step()
@@ -56,14 +79,14 @@ class VanillaGAN():
                 dis_loss.backward()
                 self.dis_optimizer.step()
 
-                psnr = calculate_psnr(images.squeeze().cpu().detach().numpy(), out.squeeze().cpu().detach().numpy())
-                psnr_values.append(psnr)
+                #psnr = calculate_psnr(images.squeeze().cpu().detach().numpy(), out.squeeze().cpu().detach().numpy())
+                #psnr_values.append(psnr)
 
-                if(i%1000==0):
+                if(i%50==0):
                     print(f"{i}/{len(data.train_loader)}")
 
             print(f"Epoch {self.iteration} is done!")
-            print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")
+            #print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")
             self.save()
 
     def save(self):

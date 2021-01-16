@@ -8,7 +8,7 @@ from models.beemodels.fpnModel import fpnGan
 from models.beemodels.vanillaGAN import VanillaGAN
 
 cfg = Config()
-data = DataRead(cfg.dataset, cfg.masking_type, cfg.batch_size)
+data = DataRead()
 
 if cfg.model == "EdgeConnect":
     edgeConnectModel = EdgeConnect()

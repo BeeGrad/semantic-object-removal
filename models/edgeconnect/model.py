@@ -353,7 +353,7 @@ class EdgeConnect():
         outputs_merged = (i_outputs * mask) + (test_image * (1 - mask))
         print("Inpaint is completed!")
 
-        output_image = outputs_merged.squeeze().permute(1,2,0)
+        output_image = i_outputs.squeeze().permute(1,2,0)
         e_outputs = e_outputs.squeeze(0)
         e_outputs = e_outputs.squeeze(0)
 

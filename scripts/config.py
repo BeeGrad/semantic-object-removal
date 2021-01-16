@@ -23,7 +23,7 @@ class Config():
                 -places2
                 -cifar10
                 '''
-        self.batch_size = 2
+        self.batch_size = 8
         ''' Batch Size for DataLoader '''
         self.masking_type = "10-20percentage"
         ''' Current Choices for masking types:
@@ -38,7 +38,7 @@ class Config():
         ''' Maximum value in an image, necessary to calculate PSNR '''
 
         # EdgeConnect Model Parameters
-        self.model = "FPNGan"
+        self.model = "Contextual"
         ''' Current Choices for Deep Learning Models:
                 -EdgeConnect
                 -Contextual
@@ -47,7 +47,7 @@ class Config():
                 '''
         self.saveName = f"{self.model}Model"
         ''' Save name that is going to be used while training '''
-        self.loadModel = True
+        self.loadModel = False
         ''' Choose to load model '''
         self.loadName = f"{self.model}Model"
         ''' Load name to load the pre-trained model '''
@@ -72,12 +72,13 @@ class Config():
         ''' Save locations for generator and discriminator for edge and inpaint models for train'''
 
         # Test parameters
-        self.test_im_path = '../tests/testImage.jpg'
+        self.test_im_path = '../tests/shrinkedDataTest.jpg'
         ''' Location of the image that is used to eval the program '''
-        self.test_mask_method = 'freely_select_from_image'
+        self.test_mask_method = 'select_by_train_mask'
         ''' Method to mask the test image
             - freely_select_from_image
             - select_by_edge
+            - select_by_train_mask
          '''
         self.freely_select_mask_size = 15
         ''' Size of the brush for freely select method '''
@@ -129,7 +130,7 @@ class Config():
         self.context_mask_shape = [128,128]
         self.context_margin = [0,0]
         self.mask_batch_same = True
-        self.context_batch_size = 5
+        self.context_batch_size = 8
         self.context_max_delta_shape = [32,32]
         self.context_mosaic_unit_size = 12
         ''' Random bbox parameters '''
@@ -158,10 +159,10 @@ class Config():
         self.test_context_discs_path = f"../saves/ContextualModel/pretrainedOur/Discriminators.pth"
         ''' Model Load Paths '''
         # FPN Model Parameters
-        self.fpn_inpaint_gen_path = f"../saves/{self.saveName}/InpaintGenerator.pt"
-        self.fpn_inpaint_disc_path = f"../saves/{self.saveName}/InpaintDiscriminator.pt"
-        self.fpn_fpnNetwork_path = f"../saves/{self.saveName}/FPN.pt"
+        self.fpn_inpaint_gen_path = f"../saves/FPNGanModel/InpaintGenerator.pt"
+        self.fpn_inpaint_disc_path = f"../saves/FPNGanModel/InpaintDiscriminator.pt"
+        self.fpn_fpnNetwork_path = f"../saves/FPNGanModel/FPN.pt"
 
         # Vanilla Model Parameters
-        self.vanilla_inpaint_gen_path = f"../saves/{self.saveName}/InpaintGenerator.pt"
-        self.vanilla_inpaint_disc_path = f"../saves/{self.saveName}/InpaintDiscriminator.pt"
+        self.vanilla_inpaint_gen_path = f"../saves/VanillaGANModel/InpaintGenerator.pt"
+        self.vanilla_inpaint_disc_path = f"../saves/VanillaGANModel/InpaintDiscriminator.pt"

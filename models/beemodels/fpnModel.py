@@ -26,6 +26,29 @@ class fpnGan():
         self.dis_optimizer = optim.Adam(params=self.inpaint_model.discriminator.parameters(),
             lr=float(cfg.edge_LR) * float(cfg.edge_D2G_LR), betas=(cfg.edge_BETA1, cfg.edge_BETA2))
 
+    def single_test(self, test_image, mask):
+        self.load()
+
+        test_image = torch.FloatTensor(test_image) / 255
+        mask = torch.FloatTensor(mask) / 255
+
+        test_image = test_image.permute(2,0,1)
+        test_image = test_image.unsqueeze(0)
+        mask = mask.unsqueeze(0)
+        mask = mask.unsqueeze(0)
+
+        print(f"Mask shape: {mask.shape}")
+        print(f"Test Image shape: {test_image.shape}")
+
+        o1, o2, o3, o4 = self.fpn(test_image)
+        out, gen_loss, dis_loss = self.inpaint_model.step(o1, mask, test_image)
+        out = (out * mask) + (test_image * (1 - mask))
+
+        out = out.squeeze(0).permute(1,2,0)
+        print(f"Output shape: {out.shape}")
+
+        return out.detach().numpy()
+
     def run(self, data):
         data.create_data_loaders()
 
@@ -34,7 +57,7 @@ class fpnGan():
 
         for i in range(self.iteration, cfg.epoch_num):
             self.iteration += 1
-            psnr_values = []
+            # psnr_values = []
             for i, images in enumerate(data.train_loader):
                 self.gen_optimizer.zero_grad()
                 self.dis_optimizer.zero_grad()
@@ -51,14 +74,14 @@ class fpnGan():
                 masks = masks.to(cfg.DEVICE)
 
                 o1, o2, o3, o4 = self.fpn(masked_images)
-                out, gen_loss, dis_loss, logs = self.inpaint_model.step(o1, masks, images)
+                out, gen_loss, dis_loss = self.inpaint_model.step(o1, masks, images)
                 out = (out * masks) + (images * (1 - masks))
 
-                # show_sample_input_data_context(masked_images, out, masks)
+                #show_sample_input_data_context(masked_images.cpu(), out.cpu(), masks.cpu())
 
-                # print(f"Shape of Masked Images (Input of FPN):{masked_images.shape}")
-                # print(f"Shape of Features (Input of Inpaint GAN):{o1.shape}")
-                # print(f"Shape of Inpainted Image (Output of Inpaint GAN):{out.shape}")
+                #print(f"Shape of Masked Images (Input of FPN):{masked_images.shape}")
+                #print(f"Shape of Features (Input of Inpaint GAN):{o1.shape}")
+                #print(f"Shape of Inpainted Image (Output of Inpaint GAN):{out.shape}")
 
                 gen_loss.backward()
                 self.gen_optimizer.step()
@@ -67,15 +90,17 @@ class fpnGan():
                 dis_loss.backward()
                 self.dis_optimizer.step()
 
-                psnr = calculate_psnr(images.squeeze().cpu().detach().numpy(), out.squeeze().cpu().detach().numpy())
-                psnr_values.append(psnr)
+                # psnr = calculate_psnr(images.squeeze().cpu().detach().numpy(), out.squeeze().cpu().detach().numpy())
+                # psnr_values.append(psnr)
 
-                if(i%1000==0):
+                if(i%50==0):
                     print(f"{i}/{len(data.train_loader)}")
 
             print(f"Epoch {self.iteration} is done!")
-            print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")
+            # print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")
             self.save()
+            if (self.iteration == 60):
+                exıt()
 
     def save(self):
         """
@@ -109,12 +134,12 @@ class fpnGan():
         Description:
             Load 3 pytorch model for fpn an inpaint models for training
         """
-        fpnModel = torch.load(cfg.fpn_fpnNetwork_path, map_location=lambda storage, loc: storage)
+        fpn = torch.load(cfg.fpn_fpnNetwork_path, map_location=lambda storage, loc: storage)
         inpaintDisc = torch.load(cfg.fpn_inpaint_disc_path, map_location=lambda storage, loc: storage)
         inpaintGen = torch.load(cfg.fpn_inpaint_gen_path, map_location=lambda storage, loc: storage)
 
-        self.iteration = fpnModel['iteration']
-        self.fpn.load_state_dict(fpnModel['generator'])
+        self.iteration = fpn['iteration']
+        self.fpn.load_state_dict(fpn['generator'])
         self.inpaint_model.generator.load_state_dict(inpaintGen['generator'])
         self.inpaint_model.discriminator.load_state_dict(inpaintDisc['discriminator'])
         print("Models are loaded!")

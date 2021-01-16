@@ -13,11 +13,10 @@ from scripts.config import Config
 cfg = Config()
 
 class DataRead():
-    def __init__(self, dataset="cifar10", masking_type="lines", batch_size = 10):
-        self.dataset = dataset
-        self.masking_type = masking_type
-        self.batch_size = batch_size
-
+    def __init__(self, dataset="cifar10", batch_size = 10):
+        # self.dataset = dataset
+        self.masking_type = cfg.masking_type
+        self.batch_size = cfg.batch_size
     def get_data(self):
         """
         Input:
@@ -97,7 +96,7 @@ class DataRead():
             for img in range(imgs.shape[0]):
                 mask = np.full((image_width,image_heigth, image_channel), 255, np.uint8) ## White background
 
-                for _ in range(np.random.randint(1, image_width // 4)):
+                for _ in range(np.random.randint(1, image_width // 8)):
                     # Get random x locations to start line
                     x1, x2 = np.random.randint(1, image_width), np.random.randint(1, image_width)
                     # Get random y locations to start line
@@ -114,10 +113,12 @@ class DataRead():
                     :, :, 0
                 ]  # Mask should be 2 dimensional for the rest of the operations
                 masks[img] = mask
-                gray_data[img] = cv2.cvtColor(imgs[img], cv2.COLOR_RGB2GRAY)
-                print(gray_data[img].shape)
-                edges[img] = cv2.Canny(gray_data[img], cfg.thresh1, cfg.thresh2)
+                gray_data[img] = rgb2gray(imgs[img])
+                # print(gray_data[img].shape)
+                edges[img] = canny(gray_data[img], sigma=cfg.SIGMA)
+                edges[img] = np.abs(edges[img] - 1)
                 masked_data[img] = masked_image
+            return masks, gray_data, edges, masked_data
 
         if self.masking_type == '10-20percentage':
             coverage = np.random.uniform(3.2,4.4)
@@ -143,7 +144,6 @@ class DataRead():
                 ]  # Mask should be 2 dimensional for the rest of the operations
                 masks[img] = mask
                 gray_data[img] = rgb2gray(imgs[img])
-                gray_data
                 edges[img] = canny(gray_data[img], sigma=cfg.SIGMA)
                 edges[img] = np.abs(edges[img] - 1)
                 masked_data[img] = masked_image
@@ -160,10 +160,10 @@ class DataRead():
             Creates necessary data loaders for pytorch with specified batch size.
         """
         # Train
-        dataset = torchvision.datasets.ImageFolder(root='../datasets/data_256', transform=torchvision.transforms.ToTensor())
+        dataset = torchvision.datasets.ImageFolder(root='../../datasets/shrinkedDatax2', transform=torchvision.transforms.ToTensor())
         self.train_loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True, num_workers=0)
         # Test
-        dataset = torchvision.datasets.ImageFolder(root='../datasets/test_256', transform=torchvision.transforms.ToTensor())
+        dataset = torchvision.datasets.ImageFolder(root='../../datasets/test_256', transform=torchvision.transforms.ToTensor())
         self.test_loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True, num_workers=0)
 
     def return_inputs(self, imgs):
@@ -188,7 +188,7 @@ class DataRead():
             print(f"data shape: {imgs.shape}")
             cfg.show_sample_data = False
 
-        return imgs, gray_images, edges, masks
+        return imgs, gray_images, edges, masks, masked_images
 
     def return_inputs_fpn(self, imgs):
         masks, gray_images, edges, masked_images = self.create_masked_data(imgs.permute(0,2,3,1).numpy())

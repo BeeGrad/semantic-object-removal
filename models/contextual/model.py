@@ -64,16 +64,16 @@ class GenerativeContextual(nn.Module):
         self.train()
         l1_loss = nn.L1Loss()
         losses = {}
-        psnr_values = []
+        # psnr_values = []
         self.epoch = 0
 
         bboxes = random_bbox()
-        data.context_create_data_loaders()
+        data.create_data_loaders()
+
+        print(f"Iteration Num {len(data.train_loader)}")
 
         for epoch in range(self.epoch, cfg.epoch_num):
             for i, images in enumerate(data.train_loader):
-                if i>20000:
-                    break
                 images, masks, masked_images = data.return_inputs_contextual(images[0], bboxes)
 
                 if cfg.show_sample_data:
@@ -144,14 +144,15 @@ class GenerativeContextual(nn.Module):
                 self.optimizer_d.step()
 
                 self.iteration += 1
-                psnr = calculate_psnr(images.squeeze().cpu().detach().numpy(), inpainted_result.squeeze().cpu().detach().numpy())
-                psnr_values.append(psnr)
-                if i % 10000 == 0:
-                    print(f"Epoch: {epoch}, Iteration: {i}/{20000}")
-
-            print(f"Epoch {self.iteration} is done!")
-            print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")
+                # psnr = calculate_psnr(images.squeeze().cpu().detach().numpy(), inpainted_result.squeeze().cpu().detach().numpy())
+                # psnr_values.append(psnr)
+                if i % 50 == 0:
+                    print(f"Epoch: {epoch}, Iteration: {i}")
+            losses = {}
+            print(f"Epoch {self.epoch} is done!")
+            # print(f"PSNR Average for Epoch {self.iteration} is {sum(psnr_values)/len(psnr_values)}!")
             self.save()
+            self.epoch += 1
 
     def save(self):
         """

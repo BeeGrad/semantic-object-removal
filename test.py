@@ -1,13 +1,17 @@
 import cv2
 import numpy as np
 from utils.utils import calculate_psnr
-from utils.testutils import freely_select_from_image, select_by_edge
+from utils.testutils import freely_select_from_image, select_by_edge, select_by_train_mask
 from scripts.config import Config
 from models.mathematicalmodels.model import InpaintMathematical
 from models.edgeconnect.model import EdgeConnect
 from models.contextual.model import GenerativeContextual
 from models.beemodels.unifiedModel import EdgeContextUnifiedModel
+from models.beemodels.vanillaGAN import VanillaGAN
+from models.beemodels.fpnModel import fpnGan
 from matplotlib import pyplot as plt
+from skimage.measure import compare_ssim
+
 
 cfg = Config()
 original_image = cv2.imread(cfg.test_im_path)
@@ -19,10 +23,23 @@ if (cfg.test_mask_method == "freely_select_from_image"):
 if (cfg.test_mask_method == "select_by_edge"):
     input_image = select_by_edge(original_image)
 
+if (cfg.test_mask_method == "select_by_train_mask"):
+    input_image, img_gray, edge_org, mask = select_by_train_mask(original_image/255.0)
+
 # Opencv saves image channels as BGR, from now on to show those images correctly
 # We convert images BGR2RGB
 original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
 input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
+
+# Input Section
+fig=plt.figure(figsize=(2, 2))
+fig.add_subplot(2, 2, 1)
+plt.imshow(original_image)
+fig.add_subplot(2, 2, 2)
+plt.imshow(input_image)
+fig.add_subplot(2, 2, 3)
+plt.imshow(mask, cmap='gray')
+plt.show()
 
 # Inpaint Models
 print("Mathematical Model Section Started! ...")
@@ -44,17 +61,37 @@ print("Unified Model Section Started! ...")
 inpaintUnified = EdgeContextUnifiedModel()
 outputUnified, halfOutputUnified = inpaintUnified.single_test(input_image, mask, img_gray, edge_org)
 print("Unified Model Section Ended!")
+
+print("Vanilla Model Section Started! ...")
+inpaintVanilla = VanillaGAN()
+outputVanilla = inpaintVanilla.single_test(input_image, mask)
+print("Vanilla Model Section Ended!")
+
+print("FPN Model Section Started! ...")
+inpaintFPN = fpnGan()
+outputFPN = inpaintFPN.single_test(input_image, mask)
+print("FPN Model Section Ended!")
 #######
 
 original_image = original_image/255
 input_image = input_image/255
 
-# print(f"PSNR value of masked image: {calculate_psnr(input_image, original_image, mask)}")
+# SSIM and PSNR
 print(f"PSNR value of masked image: {calculate_psnr(input_image, original_image)}]")
 print(f"PSNR value of Math inpainted image: {calculate_psnr(outputMath/255, original_image)}]")
 print(f"PSNR value of Contextual inpainted image: {calculate_psnr(outputContextual, original_image)}]")
 print(f"PSNR value of Edge inpainted image: {calculate_psnr(outputEdge, original_image)}]")
 print(f"PSNR value of Unified inpainted image: {calculate_psnr(outputUnified, original_image)}]")
+print(f"PSNR value of Vanilla inpainted image: {calculate_psnr(outputVanilla, original_image)}]")
+print(f"PSNR value of FPN inpainted image: {calculate_psnr(outputFPN, original_image)}]")
+
+print(f"SSIM value of masked image: {compare_ssim(original_image, input_image, data_range=1, win_size=11, multichannel=True)}]")
+print(f"SSIM value of Math inpainted image: {compare_ssim(original_image, outputMath/255, data_range=1, win_size=11, multichannel=True)}]")
+print(f"SSIM value of Contextual inpainted image: {compare_ssim(original_image, outputContextual, data_range=1, win_size=11, multichannel=True)}]")
+print(f"SSIM value of Edge inpainted image: {compare_ssim(original_image, outputEdge, data_range=1, win_size=11, multichannel=True)}]")
+print(f"SSIM value of Unified inpainted image: {compare_ssim(original_image, outputUnified, data_range=1, win_size=11, multichannel=True)}]")
+print(f"SSIM value of Edge inpainted image: {compare_ssim(original_image, outputVanilla, data_range=1, win_size=11, multichannel=True)}]")
+print(f"SSIM value of Unified inpainted image: {compare_ssim(original_image, outputFPN, data_range=1, win_size=11, multichannel=True)}]")
 
 # Context Section
 fig=plt.figure(figsize=(2, 2))
@@ -102,4 +139,24 @@ fig.add_subplot(2, 2, 3)
 plt.imshow(outputUnified)
 fig.add_subplot(2, 2, 4)
 plt.imshow(halfOutputUnified)
+plt.show()
+
+# Vanilla Section
+fig=plt.figure(figsize=(2, 2))
+fig.add_subplot(2, 2, 1)
+plt.imshow(original_image)
+fig.add_subplot(2, 2, 2)
+plt.imshow(input_image)
+fig.add_subplot(2, 2, 3)
+plt.imshow(outputVanilla)
+plt.show()
+
+# Vanilla Section
+fig=plt.figure(figsize=(2, 2))
+fig.add_subplot(2, 2, 1)
+plt.imshow(original_image)
+fig.add_subplot(2, 2, 2)
+plt.imshow(input_image)
+fig.add_subplot(2, 2, 3)
+plt.imshow(outputFPN)
 plt.show()
