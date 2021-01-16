@@ -118,7 +118,7 @@ class Config():
         '''
         self.context_input_dim = 3
         self.context_gen_feat_dim = 32
-        self.context_dis_feat_dim = 32
+        self.context_dis_feat_dim = 64 # Yanlislikla 32 kalmis ilk trainimizde
         ''' Input and output sizes for gen and dis networks '''
         self.use_cuda = False
         ''' Choose to use cuda '''
@@ -155,8 +155,8 @@ class Config():
         self.context_discs_path = f"../saves/ContextualModel/pretrainedOur/Discriminators.pth"
         self.context_generator_path = f"../saves/ContextualModel/pretrainedOur/Generator.pth"
         ''' Model Save and Load Paths '''
-        self.test_context_gen_path = f"../saves/ContextualModel/pretrainedOur/Generator.pth"
-        self.test_context_discs_path = f"../saves/ContextualModel/pretrainedOur/Discriminators.pth"
+        self.test_context_gen_path = f"../saves/ContextualModel/pretrainedPaper/Generator.pt"
+        self.test_context_discs_path = f"../saves/ContextualModel/pretrainedPaper/Discriminators.pt"
         ''' Model Load Paths '''
         # FPN Model Parameters
         self.fpn_inpaint_gen_path = f"../saves/{self.saveName}/InpaintGenerator.pt"

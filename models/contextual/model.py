@@ -28,9 +28,15 @@ class GenerativeContextual(nn.Module):
         discs = torch.load(cfg.test_context_discs_path, map_location=lambda storage, loc: storage)
 
         print('#############################')
+        # Our trained Load
         self.Generator.load_state_dict(gen['generator'])
         self.LocalDis.load_state_dict(discs['localDiscriminator'])
         self.GlobalDis.load_state_dict(discs['globalDiscriminator'])
+
+        # Pre-trained Load
+        # self.LocalDis.load_state_dict(discs['localD'])
+        # self.GlobalDis.load_state_dict(discs['globalD'])
+        # self.Generator.load_state_dict(gen)
 
         img = torch.FloatTensor(img) / 255
         mask = torch.FloatTensor(mask) / 255
