@@ -6,7 +6,6 @@ This repository is the source code of our Senior Design Project.
 **Department:** Electronics and Communication Engineering<br>
 **Academic Advisor:** Prof. Dr. Ender Mete Ekşioğlu<br>
 **Maintainers:**
-- [Ege Akertek](https://github.com/BeeGrad)
 - [Enes Demirağ](https://github.com/enesdemirag)
 - [Halil İbrahim Bengü](https://github.com/hibengu)
 
